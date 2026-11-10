@@ -1,0 +1,362 @@
+/* MAKER® — 职业形象转盘
+   纯静态，无外部依赖。内容全部来自个人经历记录，数字与事实原样保留。
+   照片槽位：assets/stages/stage-01.jpg ~ stage-06.jpg，文件存在时自动替换 SVG 占位剪影。 */
+
+'use strict';
+
+const STAGES = [
+  {
+    id: 'stage-01', num: '01', en: 'CAMPUS', zh: '校园',
+    years: '2012–2016', org: '广东工业大学',
+    color: '#33565d', dark: '#22393f', prop: 'book',
+    duration: '4 年',
+    summary: '从校园社团到写代码的起点',
+    items: [
+      '广东工业大学 · 计算机本科',
+      '电子社团部长，带 16 人销售团队',
+      '校联想 Idea 精英汇会长',
+      '大学英语四级 CET-4',
+    ],
+    tags: ['计算机本科', '销售与培训', '创意策划', '英语四级'],
+  },
+  {
+    id: 'stage-02', num: '02', en: 'GAME SERVER', zh: '游戏服务器',
+    years: '2016–2018', org: '深圳市七大道科技有限公司',
+    color: '#5b7a3a', dark: '#42592a', prop: 'gamepad',
+    duration: '约 2 年',
+    summary: '从写模块到扛住 10+ 个版本',
+    items: [
+      '深圳市七大道科技有限公司 · Java',
+      '神曲海外版需求开发，对接 mobage 平台',
+      '维护 10+ 版本稳定运行',
+      '在线 bug 产出率同比下降 56.7%',
+      'Mythic Glory 核心战斗与技能 buff 模块',
+      '贡献 30% 服务器功能模块',
+    ],
+    tags: ['Java', '游戏服务器', 'mobage', '战斗系统', 'Buff 系统'],
+  },
+  {
+    id: 'stage-03', num: '03', en: 'LEAD DEV', zh: '主程',
+    years: '2018–2019', org: '深圳市八度时空科技有限公司',
+    color: '#b07d2b', dark: '#8a5f1d', prop: 'laptop',
+    duration: '1 年 7 个月',
+    summary: '从写代码到带团队、定规范',
+    items: [
+      '深圳市八度时空科技有限公司 · 游戏服务器主程',
+      '负责架构设计、服务器性能优化',
+      '主导多个项目稳定上线，带 4 人团队',
+      'SVN 切 Git，分支本地化需求 2 天 → 半天',
+      '从 0 到 1 部署游戏服务器并写文档',
+    ],
+    tags: ['架构设计', '性能优化', '团队管理', 'Git', '部署运维'],
+  },
+  {
+    id: 'stage-04', num: '04', en: 'SKYNET', zh: '分布式架构',
+    years: '2019–2020', org: '广州君海网络科技有限公司',
+    color: '#6b5b95', dark: '#4e426e', prop: 'nodes',
+    duration: '9 个月',
+    summary: '把一套服务器架构成全球服标准',
+    items: [
+      '广州君海网络科技有限公司 · 服务端开发工程师',
+      '搭建分布式、高并发、高可用游戏服务器架构',
+      'skynet 性能探索与模块瓶颈分析',
+      'SLG 服务器从 0 预研：内存 + redis 双缓存、redis 集群',
+      '卡牌放置类游戏重构，重复代码减少 50%',
+      '引入行为树替代状态机 AI',
+    ],
+    tags: ['skynet', '分布式架构', 'Redis', 'Lua', '行为树'],
+  },
+  {
+    id: 'stage-05', num: '05', en: 'WHITEBOARD', zh: '白板',
+    years: '2022–2025', org: '华为 IdeaHub 白板',
+    color: '#2f5d8a', dark: '#214263', prop: 'marker',
+    duration: '4 年',
+    summary: '从写代码到管开源与漏洞',
+    items: [
+      '华为 IdeaHub 白板 · 2022–2025',
+      '保存 / 打开 / 导出、白板转 PPT 1:1 转换',
+      '鸿蒙单框架特性（JS / TS / ArkTS）',
+      'AI 工具栏、AI 问答、思维导图、一键生图',
+      '漏洞管理接口人：处理 191，分发 500+，libing 任务 6000+',
+      '产品开源代表；2025 年推动 Claude Code 落地',
+      '培训 1 次、3 个共享 skills、4 篇实践帖',
+    ],
+    tags: ['Java', 'HarmonyOS', '开源治理', '漏洞管理', 'AI 工具栏'],
+  },
+  {
+    id: 'stage-06', num: '06', en: 'MAKER', zh: '造物者',
+    years: '2025–至今', org: '重新找回创造力',
+    color: '#b4452f', dark: '#8c3524', prop: 'spark',
+    duration: '进行中',
+    summary: '老兵开始造自己的东西',
+    items: [
+      '重新找回创造力的程序员',
+      '微信公众号 OoneAI：AI 生图与视频生成',
+      'Seedream 5.5 深度测评：高赞案例汇总',
+      'Minimax H3 视频生成 + ComfyUI',
+    ],
+    tags: ['OoneAI', 'Seedream', 'Minimax H3', 'ComfyUI', 'AI 生图'],
+  },
+];
+
+/* ---------- 俯视人物剪影（SVG 占位，照片到位后由照片替换） ---------- */
+function propSVG(s) {
+  const d = s.dark, c = s.color;
+  switch (s.prop) {
+    case 'book':
+      return `<g transform="translate(148 92)"><rect width="26" height="34" rx="3" fill="#fff" stroke="${d}" stroke-width="2"/><line x1="6" y1="10" x2="20" y2="10" stroke="${d}" stroke-width="2"/><line x1="6" y1="17" x2="20" y2="17" stroke="${d}" stroke-width="2"/><line x1="6" y1="24" x2="16" y2="24" stroke="${d}" stroke-width="2"/></g>`;
+    case 'gamepad':
+      return `<g transform="translate(136 100)"><rect width="48" height="28" rx="13" fill="#222"/><circle cx="13" cy="14" r="3" fill="#fff"/><circle cx="36" cy="11" r="2.4" fill="#fff"/><circle cx="36" cy="17" r="2.4" fill="#fff"/></g>`;
+    case 'laptop':
+      return `<g transform="translate(140 100)"><rect width="42" height="28" rx="3" fill="#222"/><rect x="8" y="7" width="26" height="14" fill="#fff" opacity=".85"/><rect x="-4" y="28" width="50" height="4" rx="2" fill="#222"/></g>`;
+    case 'nodes':
+      return `<g stroke="${d}" stroke-width="2" fill="#fff"><line x1="150" y1="98" x2="166" y2="116"/><line x1="166" y1="116" x2="148" y2="130"/><circle cx="150" cy="98" r="6"/><circle cx="166" cy="116" r="6"/><circle cx="148" cy="130" r="6"/></g>`;
+    case 'marker':
+      return `<g transform="translate(154 88) rotate(24)"><rect width="10" height="38" rx="5" fill="${c}" stroke="#fff" stroke-width="1.5"/><path d="M0 38 L5 48 L10 38 Z" fill="${d}"/></g>`;
+    case 'spark':
+      return `<path d="M158 88 L163 102 L178 106 L163 111 L158 126 L153 111 L138 106 L153 102 Z" fill="#f5b301" stroke="#fff" stroke-width="1"/>`;
+    default:
+      return '';
+  }
+}
+
+function figureSVG(s) {
+  const c = s.color, d = s.dark;
+  return `<svg viewBox="0 0 200 240" aria-hidden="true">
+    <ellipse cx="100" cy="226" rx="54" ry="10" fill="rgba(20,20,20,.12)"/>
+    <rect x="76" y="148" width="20" height="66" rx="9" fill="${d}"/>
+    <rect x="104" y="148" width="20" height="66" rx="9" fill="${d}"/>
+    <ellipse cx="86" cy="218" rx="12" ry="6" fill="#1c1c1c"/>
+    <ellipse cx="114" cy="218" rx="12" ry="6" fill="#1c1c1c"/>
+    <rect x="44" y="84" width="18" height="64" rx="9" fill="${d}" transform="rotate(8 53 116)"/>
+    <rect x="138" y="84" width="18" height="64" rx="9" fill="${d}" transform="rotate(-8 147 116)"/>
+    <circle cx="52" cy="150" r="8" fill="#e9be9a"/>
+    <circle cx="148" cy="150" r="8" fill="#e9be9a"/>
+    <path d="M62 80 Q100 64 138 80 L146 152 Q100 164 54 152 Z" fill="${c}"/>
+    <path d="M88 76 L100 92 L112 76 L112 70 L88 70 Z" fill="rgba(255,255,255,.28)"/>
+    <circle cx="100" cy="48" r="24" fill="#e9be9a"/>
+    <path d="M76 50 Q74 22 100 22 Q126 22 124 50 Q114 34 100 34 Q86 34 76 50 Z" fill="#262626"/>
+    ${propSVG(s)}
+  </svg>`;
+}
+
+/* 照片槽位：assets/stages/stage-0X.jpg 存在时自动替换剪影 */
+function photoImg(s) {
+  return `<img class="stage-photo" src="assets/stages/${s.id}.jpg" alt="${s.en} ${s.zh} 阶段照片" loading="lazy" onload="this.closest('.fig-body').classList.add('has-photo')" onerror="this.remove()">`;
+}
+
+/* ---------- 状态 ---------- */
+let selected = null;
+let dragX = 0;
+let suppressClick = false;
+
+const stageEl = document.getElementById('stage');
+const hintEl = document.getElementById('stageHint');
+const dragBadge = document.getElementById('dragBadge');
+const numEl = document.getElementById('currentNum');
+const nameEl = document.getElementById('currentName');
+const tagsEl = document.getElementById('tags');
+const receiptBtn = document.getElementById('receiptBtn');
+const receiptEl = document.getElementById('receipt');
+const receiptInner = document.getElementById('receiptInner');
+const scrimEl = document.getElementById('scrim');
+
+/* ---------- 生成人物 ---------- */
+const figures = STAGES.map((s, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'figure';
+  btn.type = 'button';
+  btn.setAttribute('aria-label', `${s.num} ${s.en} ${s.zh}，${s.years}，点击查看档案`);
+  btn.innerHTML =
+    `<span class="fig-body">${figureSVG(s)}${photoImg(s)}<span class="fig-num">${s.num}</span></span>` +
+    `<span class="fig-label">${s.num} · ${s.en}</span>`;
+  btn.addEventListener('click', () => {
+    if (suppressClick) return;
+    if (selected === i) { deselect(); return; }
+    select(i, true);
+  });
+  stageEl.appendChild(btn);
+  return btn;
+});
+
+/* ---------- 布局：弧形排布，选中者居中放大 ---------- */
+function layout() {
+  const stageW = stageEl.clientWidth;
+  const anchor = selected === null ? 2.5 : selected;
+  const spacing = Math.min(168, stageW / 6.4);
+  figures.forEach((el, i) => {
+    const off = i - anchor;
+    const x = off * spacing + dragX;
+    const y = 26 + Math.min(Math.abs(off), 3) * 16 + (selected === i ? -6 : 0);
+    const scale = selected === i ? 1.42 : Math.max(0.68, 1 - Math.abs(off) * 0.085);
+    el.style.transform = `translateX(${x}px) translateY(${y}px) scale(${scale})`;
+    el.style.zIndex = String(100 - Math.round(Math.abs(off) * 10) + (selected === i ? 100 : 0));
+    el.classList.toggle('selected', selected === i);
+    el.classList.toggle('dimmed', selected !== null && selected !== i);
+  });
+}
+
+/* ---------- 底部信息 + 标签 ---------- */
+function updateBottom() {
+  if (selected === null) {
+    numEl.textContent = '— / 06';
+    nameEl.innerHTML = '选择一个阶段<small>6 STAGES · 2012 — NOW</small>';
+    tagsEl.innerHTML = '';
+    receiptBtn.disabled = true;
+    receiptBtn.textContent = '查看档案 →';
+    dragBadge.hidden = true;
+    return;
+  }
+  const s = STAGES[selected];
+  numEl.textContent = `${s.num} / 06`;
+  nameEl.innerHTML = `${s.en}<small>${s.zh} · ${s.years}</small>`;
+  tagsEl.innerHTML = s.tags.map((t) =>
+    `<span class="tag"><i style="--tag-color:${s.color}"></i>${t}</span>`).join('');
+  receiptBtn.disabled = false;
+  receiptBtn.textContent = receiptEl.classList.contains('open') ? '关闭档案 ×' : '查看档案 →';
+  dragBadge.hidden = false;
+}
+
+/* ---------- 档案收据 ---------- */
+function openReceipt(i) {
+  const s = STAGES[i];
+  receiptInner.innerHTML =
+    `<div class="r-head">MAKER<sup>®</sup></div>
+     <div class="r-meta">VOL. 01 — CAREER ARCHIVE · 2012 — NOW</div>
+     <div class="r-stage">STAGE ${s.num} · ${s.en} ${s.zh}</div>
+     <div class="r-years">${s.years.replace('–', ' – ')} · ${s.org}</div>
+     <hr class="r-rule">
+     ${s.items.map((t, n) =>
+       `<div class="r-row"><span class="r-no">${String(n + 1).padStart(2, '0')}</span><span>${t}</span></div>`).join('')}
+     <hr class="r-rule">
+     <div class="r-total"><span>TOTAL</span><span>${s.duration}</span></div>
+     <div class="r-summary">${s.summary}</div>
+     <div class="barcode" aria-hidden="true"></div>
+     <div class="r-foot">THANKS FOR VISITING.</div>`;
+  receiptEl.classList.add('open');
+  receiptEl.setAttribute('aria-hidden', 'false');
+  scrimEl.hidden = false;
+  updateBottom();
+}
+
+function closeReceipt() {
+  receiptEl.classList.remove('open');
+  receiptEl.setAttribute('aria-hidden', 'true');
+  scrimEl.hidden = true;
+  updateBottom();
+}
+
+function select(i, open) {
+  selected = i;
+  layout();
+  updateBottom();
+  hintEl.textContent = '点击已选人物可取消选择 · 左右方向键切换阶段';
+  if (open) openReceipt(i);
+  else if (receiptEl.classList.contains('open')) openReceipt(i);
+}
+
+function deselect() {
+  selected = null;
+  closeReceipt();
+  layout();
+  updateBottom();
+  hintEl.textContent = '点击任意人物，查看该阶段档案';
+}
+
+receiptBtn.addEventListener('click', () => {
+  if (selected === null) return;
+  if (receiptEl.classList.contains('open')) closeReceipt();
+  else openReceipt(selected);
+});
+document.getElementById('receiptClose').addEventListener('click', closeReceipt);
+scrimEl.addEventListener('click', closeReceipt);
+
+/* 点击舞台空白处取消选择 */
+stageEl.addEventListener('click', (e) => { if (e.target === stageEl) deselect(); });
+
+/* ---------- 拖拽：左右轻推转盘 ----------
+   注意：不在 stage 上 setPointerCapture，否则会抢掉人物按钮的 click 事件。
+   改为在 window 上监听 move/up，只在 dragging 时生效。 */
+let dragStartX = 0, dragging = false;
+stageEl.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  dragStartX = e.clientX - dragX;
+  stageEl.classList.add('dragging');
+});
+window.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  dragX = Math.max(-90, Math.min(90, e.clientX - dragStartX));
+  layout();
+});
+function endDrag() {
+  if (!dragging) return;
+  dragging = false;
+  stageEl.classList.remove('dragging');
+  if (Math.abs(dragX) > 6) {
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 120);
+  }
+  dragX = 0;
+  layout();
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+
+/* ---------- 九宫格总览 ---------- */
+const gridEl = document.getElementById('grid');
+STAGES.forEach((s, i) => {
+  const card = document.createElement('button');
+  card.className = 'grid-card';
+  card.type = 'button';
+  card.setAttribute('aria-label', `${s.num} ${s.en} ${s.zh}，${s.years}`);
+  card.innerHTML =
+    `<span class="fig-body">${figureSVG(s)}${photoImg(s)}</span>` +
+    `<h3>${s.num} · ${s.en}</h3><p>${s.zh}</p><p class="years">${s.years}</p>`;
+  card.addEventListener('click', () => { showStages(); select(i, true); });
+  gridEl.appendChild(card);
+});
+
+/* ---------- 视图切换 ---------- */
+const stageView = document.getElementById('stageView');
+const gridView = document.getElementById('gridView');
+const toggleStages = document.getElementById('toggleStages');
+const toggleGrid = document.getElementById('toggleGrid');
+const switchStages = document.getElementById('switchStages');
+const switchGrid = document.getElementById('switchGrid');
+
+function showStages() {
+  stageView.hidden = false;
+  gridView.hidden = true;
+  toggleStages.classList.add('active');
+  toggleGrid.classList.remove('active');
+  switchStages.classList.add('active');
+  switchGrid.classList.remove('active');
+  layout();
+}
+function showGrid() {
+  stageView.hidden = true;
+  gridView.hidden = false;
+  toggleGrid.classList.add('active');
+  toggleStages.classList.remove('active');
+  switchGrid.classList.add('active');
+  switchStages.classList.remove('active');
+}
+toggleStages.addEventListener('click', showStages);
+toggleGrid.addEventListener('click', showGrid);
+switchStages.addEventListener('click', showStages);
+switchGrid.addEventListener('click', showGrid);
+
+/* ---------- 键盘 ---------- */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeReceipt(); return; }
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const next = selected === null
+    ? (e.key === 'ArrowRight' ? 0 : STAGES.length - 1)
+    : (selected + (e.key === 'ArrowRight' ? 1 : -1) + STAGES.length) % STAGES.length;
+  select(next, receiptEl.classList.contains('open'));
+});
+
+/* ---------- 初始化 ---------- */
+window.addEventListener('resize', layout);
+updateBottom();
+layout();

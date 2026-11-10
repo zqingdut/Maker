@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAKER® — 张清 · 职业形象转盘</title>
+<meta name="description" content="张清：11 年软件开发，6 个职业阶段。点击人物，查看每个阶段的经历与成就。">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="top-left">EST. 2012</div>
+  <div class="top-center">MAKER<sup>®</sup></div>
+  <div class="top-right">11 YRS EXP</div>
+</header>
+
+<main>
+  <!-- 转盘视图 -->
+  <section id="stageView" class="stage-view">
+    <div class="stage" id="stage" aria-label="职业形象转盘，点击人物查看档案">
+      <!-- 人物由 main.js 生成 -->
+    </div>
+    <p class="stage-hint" id="stageHint">点击任意人物，查看该阶段档案</p>
+    <div class="drag-badge" id="dragBadge" hidden>↔ DRAG</div>
+
+    <div class="bottombar">
+      <div class="current">
+        <div class="current-num" id="currentNum">— / 06</div>
+        <div class="current-name" id="currentName">选择一个阶段</div>
+      </div>
+      <div class="tags" id="tags" aria-label="当前阶段关键词"></div>
+      <button class="receipt-btn" id="receiptBtn" disabled>查看档案 →</button>
+    </div>
+  </section>
+
+  <!-- 九宫格总览 -->
+  <section id="gridView" class="grid-view" hidden>
+    <div class="grid-head">
+      <span>全部阶段</span>
+      <span>06 STAGES · 2012 — NOW</span>
+    </div>
+    <div class="grid" id="grid"><!-- 卡片由 main.js 生成 --></div>
+  </section>
+</main>
+
+<!-- 右侧档案收据 -->
+<aside class="receipt" id="receipt" aria-hidden="true" aria-label="阶段档案">
+  <button class="receipt-close" id="receiptClose" aria-label="关闭档案">×</button>
+  <div class="receipt-inner" id="receiptInner"></div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- 侧边视图切换 -->
+<button class="side-toggle left active" id="toggleStages" aria-label="转盘视图">STAGES</button>
+<button class="side-toggle right" id="toggleGrid" aria-label="九宫格总览">GRID</button>
+
+<!-- 移动端视图切换 -->
+<div class="view-switch" role="tablist" aria-label="视图切换">
+  <button id="switchStages" class="active" role="tab">STAGES 转盘</button>
+  <button id="switchGrid" role="tab">GRID 总览</button>
+</div>
+
+<footer class="foot">
+  © 2026 张清 · MAKER — 内容基于个人经历记录整理 ·
+  <a href="https://github.com/zqingdut">GitHub zqingdut</a> ·
+  公众号 OoneAI
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
