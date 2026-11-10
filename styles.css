@@ -1,7 +1,8 @@
 /* MAKER® — 职业形象转盘
    极简浅色底、黑字，参考 NOWHERE 服装站的气质：
-   顶栏居中 LOGO、俯视人物弧形排布、右侧收据档案、底部标签条、侧边视图切换。
-   纯静态，无外部依赖。 */
+   顶栏居中 LOGO、环形轮盘（椭圆环 + 深度映射 + 惯性吸附 + 自动轮播）、
+   右侧收据档案、底部标签条、侧边视图切换。
+   纯静态，无外部依赖。人物变换由 main.js 的主循环逐帧驱动，本文件不给 .figure 加 transition。 */
 
 :root {
   --bg: #efede8;
@@ -70,7 +71,7 @@ a { color: inherit; }
   color: var(--ink-soft);
 }
 
-/* 人物 */
+/* 人物（变换由主循环逐帧写入，不要在此加 transition） */
 .figure {
   position: absolute;
   left: 50%;
@@ -83,11 +84,8 @@ a { color: inherit; }
   cursor: pointer;
   text-align: center;
   transform-origin: 50% 100%;
-  transition: transform .7s cubic-bezier(.22, 1, .36, 1),
-    opacity .5s ease, filter .5s ease;
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
 }
-.stage.dragging .figure { transition: none; }
 .figure:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 12px; }
 
 .fig-body {
@@ -96,6 +94,7 @@ a { color: inherit; }
   width: 168px;
   height: 216px;
   margin: 0 auto;
+  will-change: transform, filter;
 }
 .fig-body svg { display: block; width: 100%; height: 100%; }
 
@@ -141,8 +140,6 @@ a { color: inherit; }
   transition: color .3s ease;
 }
 .figure.selected .fig-label { color: var(--ink); font-weight: 700; }
-.figure.dimmed { opacity: .35; filter: blur(2px) saturate(.7); }
-.figure:hover:not(.selected) { opacity: .85; }
 
 /* DRAG 提示 */
 .drag-badge {
@@ -162,6 +159,30 @@ a { color: inherit; }
   pointer-events: none;
 }
 
+/* DRAG 跟随光标（虚线圆，移植自 NOWHERE 复刻页） */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  background: rgba(247, 245, 240, .72);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s ease;
+  z-index: 90;
+}
+.cursor.show { opacity: 1; }
+@media (pointer: coarse) { .cursor { display: none; } }
+
 /* ---------- 底部信息条 ---------- */
 .bottombar {
   display: grid;
@@ -170,13 +191,23 @@ a { color: inherit; }
   gap: 24px;
   padding: 14px 28px 8px;
 }
-.current-num { font-size: 12px; letter-spacing: .18em; color: var(--ink-soft); }
+.current-num { font-size: 12px; letter-spacing: .18em; color: var(--ink-soft); display: inline-block; }
+.current-num.roll { animation: roll .45s cubic-bezier(.22, 1, .36, 1); }
+@keyframes roll {
+  from { transform: translateY(55%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 .current-name {
   font-size: clamp(22px, 3.4vw, 34px);
   font-weight: 800;
   letter-spacing: .04em;
   line-height: 1.15;
   text-transform: uppercase;
+}
+.current-name.swap { animation: swap .45s cubic-bezier(.22, 1, .36, 1); }
+@keyframes swap {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 .current-name small {
   display: block;
@@ -206,6 +237,22 @@ a { color: inherit; }
   background: var(--tag-color, var(--ink));
   flex: none;
 }
+
+.bottom-actions { display: flex; align-items: center; gap: 10px; }
+
+.play-btn {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.play-btn:hover { background: var(--ink); color: #fff; }
 
 .receipt-btn {
   border: 0;
@@ -404,7 +451,7 @@ a { color: inherit; }
     text-align: center;
   }
   .tags { justify-content: center; }
-  .receipt-btn { justify-self: center; }
+  .bottom-actions { justify-self: center; }
   .grid-view { padding: 6px 16px 24px; }
   .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .side-toggle { display: none; }

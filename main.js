@@ -161,6 +161,7 @@ const receiptEl = document.getElementById('receipt');
 const receiptInner = document.getElementById('receiptInner');
 const scrimEl = document.getElementById('scrim');
 
+
 /* ---------- 生成人物 ---------- */
 const figures = STAGES.map((s, i) => {
   const btn = document.createElement('button');
@@ -172,31 +173,57 @@ const figures = STAGES.map((s, i) => {
     `<span class="fig-label">${s.num} · ${s.en}</span>`;
   btn.addEventListener('click', () => {
     if (suppressClick) return;
-    if (selected === i) { deselect(); return; }
-    select(i, true);
+    activate(i);
   });
   stageEl.appendChild(btn);
   return btn;
 });
+const figBodies = figures.map((f) => f.querySelector('.fig-body'));
 
-/* ---------- 布局：弧形排布，选中者居中放大 ---------- */
-function layout() {
-  const stageW = stageEl.clientWidth;
-  const anchor = selected === null ? 2.5 : selected;
-  const spacing = Math.min(168, stageW / 6.4);
-  figures.forEach((el, i) => {
-    const off = i - anchor;
-    const x = off * spacing + dragX;
-    const y = 26 + Math.min(Math.abs(off), 3) * 16 + (selected === i ? -6 : 0);
-    const scale = selected === i ? 1.42 : Math.max(0.68, 1 - Math.abs(off) * 0.085);
-    el.style.transform = `translateX(${x}px) translateY(${y}px) scale(${scale})`;
-    el.style.zIndex = String(100 - Math.round(Math.abs(off) * 10) + (selected === i ? 100 : 0));
-    el.classList.toggle('selected', selected === i);
-    el.classList.toggle('dimmed', selected !== null && selected !== i);
-  });
+/* ================================================================
+   轮盘引擎（移植自 NOWHERE 复刻页的环形轮盘）：
+   连续角度 theta 向 targetTheta 弹性趋近；人物按角度分布在压扁的
+   椭圆环上，深度 d=(cos+1)/2 映射缩放 / 透明度 / 模糊 / 层级；
+   拖拽带惯性，松手回弹吸附到最近阶段；滚轮步进；空闲自动轮播。
+   ================================================================ */
+const N = STAGES.length;
+const TAU = Math.PI * 2;
+const STEP = TAU / N;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let theta = 0, targetTheta = 0;
+let dragging = false, spinVel = 0, dragVel = 0, inertia = false;
+let playing = !reducedMotion;
+let lastInteract = performance.now(), lastAdvance = performance.now();
+
+function frontIndex() {
+  let best = 0, bd = -2;
+  for (let i = 0; i < N; i++) {
+    const d = Math.cos(i * STEP + theta);
+    if (d > bd) { bd = d; best = i; }
+  }
+  return best;
+}
+function rotateTo(i) {
+  const base = -i * STEP;
+  const k = Math.round((targetTheta - base) / TAU);
+  targetTheta = base + k * TAU;
+  inertia = false; spinVel = 0;
+  lastInteract = performance.now();
+}
+function stepStage(dir) {
+  const idx = Math.round(-targetTheta / STEP);
+  rotateTo(((idx + dir) % N + N) % N);
+}
+function activate(i) {
+  if (i === frontIndex() && Math.abs(targetTheta - theta) < 0.3) openReceipt(i);
+  else rotateTo(i);
 }
 
 /* ---------- 底部信息 + 标签 ---------- */
+function restartAnim(el, cls) {
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+}
 function updateBottom() {
   if (selected === null) {
     numEl.textContent = '— / 06';
@@ -204,17 +231,17 @@ function updateBottom() {
     tagsEl.innerHTML = '';
     receiptBtn.disabled = true;
     receiptBtn.textContent = '查看档案 →';
-    dragBadge.hidden = true;
     return;
   }
   const s = STAGES[selected];
   numEl.textContent = `${s.num} / 06`;
+  restartAnim(numEl, 'roll');
   nameEl.innerHTML = `${s.en}<small>${s.zh} · ${s.years}</small>`;
+  restartAnim(nameEl, 'swap');
   tagsEl.innerHTML = s.tags.map((t) =>
     `<span class="tag"><i style="--tag-color:${s.color}"></i>${t}</span>`).join('');
   receiptBtn.disabled = false;
   receiptBtn.textContent = receiptEl.classList.contains('open') ? '关闭档案 ×' : '查看档案 →';
-  dragBadge.hidden = false;
 }
 
 /* ---------- 档案收据 ---------- */
@@ -246,23 +273,6 @@ function closeReceipt() {
   updateBottom();
 }
 
-function select(i, open) {
-  selected = i;
-  layout();
-  updateBottom();
-  hintEl.textContent = '点击已选人物可取消选择 · 左右方向键切换阶段';
-  if (open) openReceipt(i);
-  else if (receiptEl.classList.contains('open')) openReceipt(i);
-}
-
-function deselect() {
-  selected = null;
-  closeReceipt();
-  layout();
-  updateBottom();
-  hintEl.textContent = '点击任意人物，查看该阶段档案';
-}
-
 receiptBtn.addEventListener('click', () => {
   if (selected === null) return;
   if (receiptEl.classList.contains('open')) closeReceipt();
@@ -271,36 +281,86 @@ receiptBtn.addEventListener('click', () => {
 document.getElementById('receiptClose').addEventListener('click', closeReceipt);
 scrimEl.addEventListener('click', closeReceipt);
 
-/* 点击舞台空白处取消选择 */
-stageEl.addEventListener('click', (e) => { if (e.target === stageEl) deselect(); });
-
-/* ---------- 拖拽：左右轻推转盘 ----------
-   注意：不在 stage 上 setPointerCapture，否则会抢掉人物按钮的 click 事件。
-   改为在 window 上监听 move/up，只在 dragging 时生效。 */
-let dragStartX = 0, dragging = false;
+/* ---------- 拖拽：连续旋转 + 惯性 + 回弹吸附 ----------
+   不在 stage 上 setPointerCapture，否则会抢掉人物按钮的 click；
+   沿用 window 监听，位移超过阈值时用 suppressClick 吞掉点击。 */
+let pDown = null;
 stageEl.addEventListener('pointerdown', (e) => {
-  dragging = true;
-  dragStartX = e.clientX - dragX;
+  const fig = e.target.closest ? e.target.closest('.figure') : null;
+  dragging = true; inertia = false; spinVel = 0; dragVel = 0;
+  pDown = {
+    lastX: e.clientX, t: performance.now(), moved: 0,
+    idx: fig ? figures.indexOf(fig) : -1,
+  };
   stageEl.classList.add('dragging');
+  lastInteract = performance.now();
 });
 window.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  dragX = Math.max(-90, Math.min(90, e.clientX - dragStartX));
-  layout();
+  if (!dragging || !pDown) return;
+  const dx = e.clientX - pDown.lastX;
+  pDown.lastX = e.clientX;
+  pDown.moved += Math.abs(dx);
+  targetTheta += dx * 0.005;
+  dragVel = dragVel * 0.6 + dx * 0.005 * 0.4;
+  lastInteract = performance.now();
 });
 function endDrag() {
   if (!dragging) return;
   dragging = false;
   stageEl.classList.remove('dragging');
-  if (Math.abs(dragX) > 6) {
+  const wasClick = pDown && pDown.moved < 6 && (performance.now() - pDown.t) < 600;
+  if (wasClick) {
     suppressClick = true;
     setTimeout(() => { suppressClick = false; }, 120);
+    if (pDown.idx >= 0) activate(pDown.idx);
+    else if (receiptEl.classList.contains('open')) closeReceipt();
+  } else {
+    spinVel = dragVel * 2.4;
+    inertia = Math.abs(spinVel) > 0.0012;
+    if (!inertia) targetTheta = Math.round(targetTheta / STEP) * STEP;
   }
-  dragX = 0;
-  layout();
+  pDown = null;
+  lastInteract = performance.now();
 }
 window.addEventListener('pointerup', endDrag);
 window.addEventListener('pointercancel', endDrag);
+
+/* ---------- 滚轮步进 ---------- */
+stageEl.addEventListener('wheel', (e) => {
+  if (!stageViewEl.hidden) { /* 转盘可见时才接管 */ } else return;
+  e.preventDefault();
+  const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  targetTheta += d * 0.0022;
+  inertia = false;
+  lastInteract = performance.now();
+  clearTimeout(stageEl._wt);
+  stageEl._wt = setTimeout(() => { targetTheta = Math.round(targetTheta / STEP) * STEP; }, 160);
+}, { passive: false });
+
+/* ---------- 自动轮播开关 ---------- */
+const playBtn = document.getElementById('playBtn');
+const SVG_PAUSE = '<svg width="9" height="10" viewBox="0 0 9 10"><rect x="0" y="0" width="3" height="10" fill="currentColor"/><rect x="6" y="0" width="3" height="10" fill="currentColor"/></svg>';
+const SVG_PLAY = '<svg width="9" height="10" viewBox="0 0 9 10"><path d="M0 0 L9 5 L0 10 Z" fill="currentColor"/></svg>';
+function renderPlay() {
+  if (!playBtn) return;
+  playBtn.innerHTML = playing ? SVG_PAUSE : SVG_PLAY;
+  playBtn.setAttribute('aria-label', playing ? '暂停自动旋转' : '播放自动旋转');
+}
+if (playBtn) playBtn.addEventListener('click', () => {
+  playing = !playing; renderPlay(); lastInteract = performance.now();
+});
+renderPlay();
+
+/* ---------- DRAG 跟随光标 ---------- */
+const cursorEl = document.getElementById('cursor');
+let curX = -100, curY = -100, curTX = -100, curTY = -100, curScale = 1;
+window.addEventListener('pointermove', (e) => {
+  curTX = e.clientX; curTY = e.clientY;
+  if (!cursorEl) return;
+  const onStage = e.target === stageEl || (e.target.closest && e.target.closest('#stage'));
+  if (onStage && !stageViewEl.hidden) cursorEl.classList.add('show');
+  else cursorEl.classList.remove('show');
+});
 
 /* ---------- 九宫格总览 ---------- */
 const gridEl = document.getElementById('grid');
@@ -312,12 +372,18 @@ STAGES.forEach((s, i) => {
   card.innerHTML =
     `<span class="fig-body">${figureSVG(s)}${photoImg(s)}</span>` +
     `<h3>${s.num} · ${s.en}</h3><p>${s.zh}</p><p class="years">${s.years}</p>`;
-  card.addEventListener('click', () => { showStages(); select(i, true); });
+  card.addEventListener('click', () => {
+    showStages();
+    selected = i;
+    rotateTo(i);
+    updateBottom();
+    openReceipt(i);
+  });
   gridEl.appendChild(card);
 });
 
 /* ---------- 视图切换 ---------- */
-const stageView = document.getElementById('stageView');
+const stageViewEl = document.getElementById('stageView');
 const gridView = document.getElementById('gridView');
 const toggleStages = document.getElementById('toggleStages');
 const toggleGrid = document.getElementById('toggleGrid');
@@ -325,16 +391,15 @@ const switchStages = document.getElementById('switchStages');
 const switchGrid = document.getElementById('switchGrid');
 
 function showStages() {
-  stageView.hidden = false;
+  stageViewEl.hidden = false;
   gridView.hidden = true;
   toggleStages.classList.add('active');
   toggleGrid.classList.remove('active');
   switchStages.classList.add('active');
   switchGrid.classList.remove('active');
-  layout();
 }
 function showGrid() {
-  stageView.hidden = true;
+  stageViewEl.hidden = true;
   gridView.hidden = false;
   toggleGrid.classList.add('active');
   toggleStages.classList.remove('active');
@@ -349,14 +414,80 @@ switchGrid.addEventListener('click', showGrid);
 /* ---------- 键盘 ---------- */
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { closeReceipt(); return; }
+  if (stageViewEl.hidden) return;
   if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-  const next = selected === null
-    ? (e.key === 'ArrowRight' ? 0 : STAGES.length - 1)
-    : (selected + (e.key === 'ArrowRight' ? 1 : -1) + STAGES.length) % STAGES.length;
-  select(next, receiptEl.classList.contains('open'));
+  stepStage(e.key === 'ArrowRight' ? 1 : -1);
 });
 
+/* ---------- 正面同步 ---------- */
+function syncFront() {
+  const fi = frontIndex();
+  if (fi !== selected && Math.abs(targetTheta - theta) < 0.35) {
+    selected = fi;
+    figures.forEach((el, i) => el.classList.toggle('selected', i === fi));
+    updateBottom();
+    if (receiptEl.classList.contains('open')) openReceipt(fi);
+    hintEl.textContent = '点击正面人物查看档案 · 拖动或滚轮旋转转盘';
+  }
+}
+
+/* ---------- 主循环 ---------- */
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!stageViewEl.hidden) {
+    /* 旋转物理 */
+    if (!dragging && inertia) {
+      targetTheta += spinVel;
+      spinVel *= 0.94;
+      if (Math.abs(spinVel) < 0.0012) {
+        inertia = false;
+        targetTheta = Math.round(targetTheta / STEP) * STEP;
+      }
+    }
+    if (!dragging && playing && !receiptEl.classList.contains('open')
+        && now - lastInteract > 2500 && now - lastAdvance > 3400) {
+      stepStage(1); lastAdvance = now;
+    }
+    theta += (targetTheta - theta) * (dragging ? 0.45 : 0.085);
+    syncFront();
+
+    /* 环形布局 */
+    const W = stageEl.clientWidth, H = stageEl.clientHeight;
+    if (W > 50 && H > 50) {
+      const Rx = W < 760 ? W * 0.40 : Math.min(W * 0.36, 560);
+      const Ry = Rx * 0.30;
+      const baseY = H * 0.96;
+      const figH = figures[0].offsetHeight || 242;
+      const t = now / 1000;
+      for (let i = 0; i < N; i++) {
+        const a = i * STEP + theta;
+        const d = (Math.cos(a) + 1) / 2;
+        const x = Rx * Math.sin(a);
+        const y = baseY + Ry * Math.cos(a) - figH;
+        const s = 0.52 + 0.66 * d;
+        const el = figures[i];
+        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${s.toFixed(3)})`;
+        el.style.opacity = (0.45 + 0.55 * d).toFixed(3);
+        el.style.zIndex = String(Math.round(d * 100));
+        const blur = (1 - d) * 4.5;
+        figBodies[i].style.filter = blur > 0.15 ? `blur(${blur.toFixed(2)}px)` : '';
+        const bob = reducedMotion ? 0 : Math.sin(t * 2.2 + i * 1.7) * 4 * (0.35 + 0.65 * d);
+        figBodies[i].style.transform = `translateY(${bob.toFixed(1)}px)`;
+      }
+    }
+  }
+  /* 光标跟随 */
+  if (cursorEl) {
+    curX += (curTX - curX) * 0.35; curY += (curTY - curY) * 0.35;
+    const ts = dragging ? 0.78 : 1;
+    curScale += (ts - curScale) * 0.3;
+    cursorEl.style.transform = `translate3d(${curX}px, ${curY}px, 0) translate(-50%, -50%) scale(${curScale})`;
+  }
+}
+
 /* ---------- 初始化 ---------- */
-window.addEventListener('resize', layout);
+selected = 0;
+figures[0].classList.add('selected');
+hintEl.textContent = '拖动转盘浏览 · 点击正面人物查看档案';
 updateBottom();
-layout();
+requestAnimationFrame(frame);

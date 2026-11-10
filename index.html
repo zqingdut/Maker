@@ -29,7 +29,10 @@
         <div class="current-name" id="currentName">选择一个阶段</div>
       </div>
       <div class="tags" id="tags" aria-label="当前阶段关键词"></div>
-      <button class="receipt-btn" id="receiptBtn" disabled>查看档案 →</button>
+      <div class="bottom-actions">
+        <button class="play-btn" id="playBtn" aria-label="暂停自动旋转"></button>
+        <button class="receipt-btn" id="receiptBtn" disabled>查看档案 →</button>
+      </div>
     </div>
   </section>
 
@@ -66,6 +69,9 @@
   公众号 OoneAI
 </footer>
 
+<div class="cursor" id="cursor" aria-hidden="true"><span>DRAG</span></div>
+
 <script src="main.js"></script>
 </body>
 </html>
+
