@@ -2,66 +2,68 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
 <title>MAKER® — 张清 · 职业形象转盘</title>
-<meta name="description" content="张清：11 年软件开发，6 个职业阶段。点击人物，查看每个阶段的经历与成就。">
-<link rel="stylesheet" href="styles.css?v=3">
+<meta name="description" content="张清：11 年软件开发，6 个职业阶段。拖动转盘，点击人物查看每个阶段的档案收据。">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
-<body>
-<header class="topbar">
-  <div class="top-left">EST. 2012</div>
-  <div class="top-center">MAKER<sup>®</sup></div>
-  <div class="top-right">11 YRS EXP</div>
-</header>
+<body class="mode-ring">
+<div class="screen" id="screen">
+  <div id="stage" aria-label="职业形象转盘，拖动旋转，点击正面人物查看档案"></div>
 
-<main>
-  <!-- 转盘视图 -->
-  <section id="stageView" class="stage-view">
-    <div class="stage" id="stage" aria-label="职业形象转盘，点击人物查看档案">
-      <!-- 人物由 main.js 生成 -->
+  <!-- 顶栏：实时时钟 + 信号 / LOGO / 档案计数（对齐 NOWHERE 顶栏） -->
+  <header class="topbar">
+    <div class="tb-left">
+      <span id="clock">--:--</span>
+      <span class="sig" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="low">SHENZHEN</span>
     </div>
-    <p class="stage-hint" id="stageHint">点击任意人物，查看该阶段档案</p>
-    <div class="drag-badge" id="dragBadge" hidden>↔ DRAG</div>
-
-    <div class="bottombar">
-      <div class="current">
-        <div class="current-num" id="currentNum">— / 06</div>
-        <div class="current-name" id="currentName">选择一个阶段</div>
+    <div class="tb-logo">MAKER<sup>®</sup></div>
+    <div class="tb-right">
+      <div class="batt-wrap" aria-hidden="true">
+        <span class="batt"><i></i></span><span>11&nbsp;YRS</span>
       </div>
-      <div class="tags" id="tags" aria-label="当前阶段关键词"></div>
-      <div class="bottom-actions">
-        <button class="play-btn" id="playBtn" aria-label="暂停自动旋转"></button>
-        <button class="receipt-btn" id="receiptBtn" disabled>查看档案 →</button>
+      <button class="bag-btn" id="archiveBtn" type="button">ARCHIVE&nbsp;(0)</button>
+    </div>
+  </header>
+
+  <div class="qr" id="qr" aria-hidden="true"></div>
+
+  <!-- 侧边视图切换 -->
+  <button class="looks-pill side-ui" id="stagesPill" type="button">STAGES</button>
+  <div class="view-toggle side-ui" role="group" aria-label="视图切换">
+    <button type="button" id="tglRing" class="on">RING</button>
+    <button type="button" id="tglGrid">GRID</button>
+  </div>
+
+  <!-- 详情态 UI -->
+  <div class="detail-title" id="detailTitle"><span class="dnum">01.</span><span class="dname">CAMPUS</span></div>
+  <div class="hint" id="hint">点人物身上的圆点，查看这个阶段的关键词</div>
+  <button class="close-btn" id="closeBtn" type="button" aria-label="关闭档案">✕</button>
+  <div class="receipt-wrap" id="receiptWrap" aria-hidden="true">
+    <div class="receipt-ghost" aria-hidden="true"></div>
+    <aside class="receipt" id="receipt" aria-label="阶段档案收据"></aside>
+  </div>
+
+  <!-- 底部信息条 -->
+  <div class="bottombar">
+    <div class="meta">
+      <div class="meta-row">
+        <span class="cnt-clip"><span class="cnt-num" id="cntNum">01</span></span><span>&nbsp;/&nbsp;06</span>
+        <button class="play-btn" id="playBtn" type="button" aria-label="播放 / 暂停"></button>
       </div>
+      <div class="look-name" id="lookName">CAMPUS</div>
+      <div class="look-sub" id="lookSub">校园 · 2012–2016</div>
     </div>
-  </section>
-
-  <!-- 九宫格总览 -->
-  <section id="gridView" class="grid-view" hidden>
-    <div class="grid-head">
-      <span>全部阶段</span>
-      <span>06 STAGES · 2012 — NOW</span>
+    <div class="chips" id="chips"></div>
+    <div class="shop-block">
+      <span>VIEW ARCHIVE</span>
+      <button class="plus-btn" id="plusBtn" type="button" aria-label="查看当前阶段档案">+</button>
     </div>
-    <div class="grid" id="grid"><!-- 卡片由 main.js 生成 --></div>
-  </section>
-</main>
+  </div>
 
-<!-- 右侧档案收据 -->
-<div class="receipt-shadow" id="receiptShadow" aria-hidden="true"></div>
-<aside class="receipt" id="receipt" aria-hidden="true" aria-label="阶段档案">
-  <button class="receipt-close" id="receiptClose" aria-label="关闭档案">×</button>
-  <div class="receipt-inner" id="receiptInner"></div>
-</aside>
-<div class="scrim" id="scrim" hidden></div>
-
-<!-- 侧边视图切换 -->
-<button class="side-toggle left active" id="toggleStages" aria-label="转盘视图">STAGES</button>
-<button class="side-toggle right" id="toggleGrid" aria-label="九宫格总览">GRID</button>
-
-<!-- 移动端视图切换 -->
-<div class="view-switch" role="tablist" aria-label="视图切换">
-  <button id="switchStages" class="active" role="tab">STAGES 转盘</button>
-  <button id="switchGrid" role="tab">GRID 总览</button>
+  <div id="cursor" aria-hidden="true">DRAG</div>
 </div>
 
 <footer class="foot">
@@ -70,9 +72,6 @@
   公众号 OoneAI
 </footer>
 
-<div class="cursor" id="cursor" aria-hidden="true"><span>DRAG</span></div>
-
-<script src="main.js?v=3"></script>
+<script src="main.js?v=4"></script>
 </body>
 </html>
-
