@@ -177,10 +177,12 @@ a { color: inherit; }
   background: rgba(247, 245, 240, .72);
   pointer-events: none;
   opacity: 0;
-  transition: opacity .25s ease;
+  transition: opacity .25s ease, background .25s ease, color .25s ease, border-color .25s ease;
   z-index: 90;
 }
 .cursor.show { opacity: 1; }
+/* 拖拽中填实心黑（同步 NOWHERE 复刻页 v2） */
+.cursor.drag { background: var(--ink); color: #fff; border-color: var(--ink); }
 @media (pointer: coarse) { .cursor { display: none; } }
 
 /* ---------- 底部信息条 ---------- */
@@ -304,6 +306,11 @@ a { color: inherit; }
 .grid-card p { margin: 0; font-size: 13px; color: var(--ink-soft); }
 .grid-card .years { font-size: 12px; letter-spacing: .14em; color: var(--ink-soft); }
 
+/* 网格入场：按编号错峰飞入（同步 NOWHERE 复刻页 v2） */
+.grid-view.enter .grid-card { animation: gridIn .55s cubic-bezier(.22, 1, .36, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes gridIn { from { opacity: 0; transform: translateY(26px) scale(.94); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .grid-view.enter .grid-card { animation: none; } }
+
 /* ---------- 右侧档案收据 ---------- */
 .receipt {
   position: fixed;
@@ -314,13 +321,31 @@ a { color: inherit; }
   background: var(--bg-soft);
   border-left: 1px solid var(--line);
   box-shadow: -18px 0 50px rgba(20, 20, 20, .14);
-  transform: translateX(105%);
+  transform: translateX(105%) rotate(3.5deg);
+  transform-origin: 100% 0;
   transition: transform .55s cubic-bezier(.22, 1, .36, 1);
   z-index: 60;
   overflow-y: auto;
   padding: 28px 26px 32px;
 }
-.receipt.open { transform: translateX(0); }
+.receipt.open { transform: translateX(0) rotate(3.5deg); }
+
+/* 影子票：从主票右上方探头（同步 NOWHERE 复刻页 v2） */
+.receipt-shadow {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  width: min(400px, 92vw);
+  background: #e7e2d6;
+  border-left: 1px solid var(--line);
+  transform: translateX(108%);
+  transform-origin: 100% 0;
+  transition: transform .55s cubic-bezier(.22, 1, .36, 1) .06s;
+  z-index: 59;
+}
+.receipt-shadow.open { transform: translate(14px, -12px) rotate(5.5deg); }
 
 .receipt-close {
   position: absolute;
@@ -486,7 +511,22 @@ a { color: inherit; }
     border-left: 0;
     border-top: 1px solid var(--line);
     border-radius: 18px 18px 0 0;
-    transform: translateY(105%);
+    transform: translateY(105%) rotate(2deg);
+    transform-origin: 50% 100%;
   }
-  .receipt.open { transform: translateY(0); }
+  .receipt.open { transform: translateY(0) rotate(2deg); }
+  .receipt-shadow {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 72vh;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    transform: translateY(108%);
+    transform-origin: 50% 100%;
+  }
+  .receipt-shadow.open { transform: translate(8px, -10px) rotate(2.5deg); }
 }

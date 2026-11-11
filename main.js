@@ -158,6 +158,7 @@ const nameEl = document.getElementById('currentName');
 const tagsEl = document.getElementById('tags');
 const receiptBtn = document.getElementById('receiptBtn');
 const receiptEl = document.getElementById('receipt');
+const receiptShadow = document.getElementById('receiptShadow');
 const receiptInner = document.getElementById('receiptInner');
 const scrimEl = document.getElementById('scrim');
 
@@ -245,6 +246,16 @@ function updateBottom() {
 }
 
 /* ---------- 档案收据 ---------- */
+/* 详情态布局（同步 NOWHERE 复刻页 v2）：开档案时舞台左移、主角放大、
+   其余人物缩小并向中心收拢，按索引逐个错峰过渡 */
+let detailOn = false, detailT0 = 0;
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+function detailAmt(i, now) {
+  const p = Math.min(Math.max((now - detailT0 - i * 36) / 420, 0), 1);
+  const e = easeOut(p);
+  return detailOn ? e : 1 - e;
+}
+
 function openReceipt(i) {
   const s = STAGES[i];
   receiptInner.innerHTML =
@@ -260,6 +271,10 @@ function openReceipt(i) {
      <div class="r-summary">${s.summary}</div>
      <div class="barcode" aria-hidden="true"></div>
      <div class="r-foot">THANKS FOR VISITING.</div>`;
+  if (!receiptEl.classList.contains('open')) {
+    detailOn = true; detailT0 = performance.now();
+    if (receiptShadow) receiptShadow.classList.add('open');
+  }
   receiptEl.classList.add('open');
   receiptEl.setAttribute('aria-hidden', 'false');
   scrimEl.hidden = false;
@@ -267,6 +282,10 @@ function openReceipt(i) {
 }
 
 function closeReceipt() {
+  if (receiptEl.classList.contains('open')) {
+    detailOn = false; detailT0 = performance.now();
+    if (receiptShadow) receiptShadow.classList.remove('open');
+  }
   receiptEl.classList.remove('open');
   receiptEl.setAttribute('aria-hidden', 'true');
   scrimEl.hidden = true;
@@ -393,6 +412,7 @@ const switchGrid = document.getElementById('switchGrid');
 function showStages() {
   stageViewEl.hidden = false;
   gridView.hidden = true;
+  gridView.classList.remove('enter');
   toggleStages.classList.add('active');
   toggleGrid.classList.remove('active');
   switchStages.classList.add('active');
@@ -401,6 +421,10 @@ function showStages() {
 function showGrid() {
   stageViewEl.hidden = true;
   gridView.hidden = false;
+  gridView.querySelectorAll('.grid-card').forEach((c, i) => c.style.setProperty('--d', `${i * 45}ms`));
+  gridView.classList.remove('enter');
+  void gridView.offsetWidth;
+  gridView.classList.add('enter');
   toggleGrid.classList.add('active');
   toggleStages.classList.remove('active');
   switchGrid.classList.add('active');
@@ -455,21 +479,28 @@ function frame(now) {
     const W = stageEl.clientWidth, H = stageEl.clientHeight;
     if (W > 50 && H > 50) {
       const Rx = W < 760 ? W * 0.40 : Math.min(W * 0.36, 560);
-      const Ry = Rx * 0.30;
+      const Ry = Rx * 0.28;
       const baseY = H * 0.96;
       const figH = figures[0].offsetHeight || 242;
       const t = now / 1000;
       for (let i = 0; i < N; i++) {
         const a = i * STEP + theta;
         const d = (Math.cos(a) + 1) / 2;
-        const x = Rx * Math.sin(a);
+        let x = Rx * Math.sin(a);
         const y = baseY + Ry * Math.cos(a) - figH;
-        const s = 0.52 + 0.66 * d;
+        let s = 0.46 + 0.72 * d;
+        let o = 0.62 + 0.38 * d;
+        const amt = detailAmt(i, now);
+        if (amt > 0.001) {
+          const shift = -Math.min(W * 0.15, 180) * amt;
+          if (i === selected) { x += shift; s *= 1 + 0.10 * amt; }
+          else { x = x * (1 - 0.25 * amt) + shift; s *= 1 - 0.30 * amt; o *= 1 - 0.30 * amt; }
+        }
         const el = figures[i];
         el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${s.toFixed(3)})`;
-        el.style.opacity = (0.45 + 0.55 * d).toFixed(3);
+        el.style.opacity = o.toFixed(3);
         el.style.zIndex = String(Math.round(d * 100));
-        const blur = (1 - d) * 4.5;
+        const blur = (1 - d) * 7;
         figBodies[i].style.filter = blur > 0.15 ? `blur(${blur.toFixed(2)}px)` : '';
         const bob = reducedMotion ? 0 : Math.sin(t * 2.2 + i * 1.7) * 4 * (0.35 + 0.65 * d);
         figBodies[i].style.transform = `translateY(${bob.toFixed(1)}px)`;
@@ -478,6 +509,7 @@ function frame(now) {
   }
   /* 光标跟随 */
   if (cursorEl) {
+    cursorEl.classList.toggle('drag', dragging);
     curX += (curTX - curX) * 0.35; curY += (curTY - curY) * 0.35;
     const ts = dragging ? 0.78 : 1;
     curScale += (ts - curScale) * 0.3;
