@@ -142,7 +142,7 @@ function figureSVG(s) {
 
 /* 照片槽位：assets/stages/stage-0X.jpg 存在时自动替换剪影 */
 function photoImg(s) {
-  return `<img class="stage-photo" src="assets/stages/${s.id}.jpg" alt="${s.en} ${s.zh} 阶段照片" loading="lazy" onload="this.closest('.fig-body').classList.add('has-photo')" onerror="this.remove()">`;
+  return `<img class="stage-photo" src="assets/stages/${s.id}.jpg?v=2" alt="${s.en} ${s.zh} 阶段照片" loading="lazy" onload="this.closest('.fig-body').classList.add('has-photo')" onerror="this.remove()">`;
 }
 
 /* ---------- 状态 ---------- */
