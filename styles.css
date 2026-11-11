@@ -112,6 +112,7 @@ a { color: inherit; }
 .figure.has-photo .stage-photo,
 .fig-body.has-photo .stage-photo { display: block; }
 .fig-body.has-photo svg { visibility: hidden; }
+.fig-body.photo-failed { outline: 3px solid #e5484d; outline-offset: -3px; }
 
 .fig-num {
   position: absolute;
