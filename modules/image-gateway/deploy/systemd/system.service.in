@@ -1,0 +1,44 @@
+[Unit]
+Description=image-gateway -- upstream media API relay and image gateway
+Documentation=file:@@PROJECT_DIR@@/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# A system unit starts as root by default. Drop to the owning account, or every
+# file the service writes -- data/files, the logs -- ends up root-owned and
+# un-editable by the person who actually uses it.
+User=@@USER@@
+Group=@@GROUP@@
+
+WorkingDirectory=@@PROJECT_DIR@@
+
+# The leading '-' means "do not fail if this file is missing". That is
+# deliberate: the wrapper script has a much better error message for a missing
+# or incomplete config (it names the variable and how to set it), and a systemd
+# "Failed to load environment files" would bury it.
+EnvironmentFile=-@@ENV_FILE@@
+
+# Keep stderr flowing into the journal instead of sitting in a block buffer.
+Environment=PYTHONUNBUFFERED=1
+
+# The wrapper, not run.sh: it loads the env file, falls back to data/ for the
+# two credentials, refuses to start an unauthenticated gateway, and then execs
+# run.sh so the PID systemd tracks is the real one.
+ExecStart=@@PROJECT_DIR@@/deploy/image-gateway-service.sh
+
+# Restart on crash, not after a clean stop. `systemctl stop` stays stopped.
+Restart=on-failure
+RestartSec=10
+
+# Grace period before SIGKILL. Generous enough for an in-flight paid generation
+# to finish rather than be abandoned mid-billing.
+TimeoutStopSec=20
+
+# A Python service does not need to gain privileges, ever.
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

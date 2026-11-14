@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Still Gallery · 图像提示词画廊</title>
+    <meta name="description" content="低多边形图像画廊：浏览作品、一键复制生成所用的完整提示词。" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span></span></div>
+          <div>
+            <h1 class="emboss-text">Still Gallery</h1>
+            <p class="subtitle">低多边形图像画廊 · 点开任意作品即可复制它的生成提示词</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="stat-pill" id="statCount">加载中…</span>
+          <a class="btn btn-sm" href="/admin">管理后台</a>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="筛选与搜索">
+        <div class="search-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          <label class="sr-only" for="searchInput">搜索标题或提示词</label>
+          <input id="searchInput" type="text" placeholder="搜索标题、提示词或标签…" autocomplete="off" />
+        </div>
+        <div>
+          <label class="sr-only" for="sortSelect">排序方式</label>
+          <select id="sortSelect">
+            <option value="newest">最新导入优先</option>
+            <option value="oldest">最早导入优先</option>
+            <option value="title">按标题排序</option>
+          </select>
+        </div>
+        <button type="button" id="clearFilters">重置筛选</button>
+      </section>
+
+      <div class="tag-bar" id="tagBar" role="group" aria-label="标签筛选"></div>
+
+      <main id="gallery" aria-live="polite">
+        <div class="masonry" id="grid"></div>
+      </main>
+    </div>
+
+    <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewerTitle" hidden>
+      <div class="viewer-panel">
+        <button type="button" class="btn btn-icon viewer-close" id="viewerClose" aria-label="关闭">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"></path>
+          </svg>
+        </button>
+        <div class="viewer-stage">
+          <img id="viewerImage" alt="" />
+        </div>
+        <div class="viewer-side">
+          <h2 id="viewerTitle" class="emboss-text"></h2>
+          <div class="card-meta" id="viewerTags"></div>
+
+          <div class="prompt-block">
+            <div class="prompt-head">
+              <h3>正向提示词</h3>
+              <button type="button" class="btn btn-sm" data-copy="prompt">复制提示词</button>
+            </div>
+            <p class="prompt-text" id="viewerPrompt"></p>
+          </div>
+
+          <div class="prompt-block" id="negativeBlock">
+            <div class="prompt-head">
+              <h3>反向提示词</h3>
+              <button type="button" class="btn btn-sm" data-copy="negativePrompt">复制反向词</button>
+            </div>
+            <p class="prompt-text" id="viewerNegative"></p>
+          </div>
+
+          <dl class="meta-grid" id="viewerMeta"></dl>
+
+          <div class="card-actions">
+            <button type="button" class="btn-primary" data-copy="all">复制全部参数</button>
+            <a class="btn" id="viewerDownload" download>下载原图</a>
+            <a class="btn btn-ghost" id="viewerSource" target="_blank" rel="noreferrer noopener" hidden>查看来源</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

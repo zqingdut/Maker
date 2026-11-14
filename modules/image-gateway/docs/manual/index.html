@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>生图 API 说明书 · image relay</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --panel: #ffffff; --ink: #16202b; --muted: #64748b;
+    --line: #e2e8f0; --accent: #2563eb; --ok: #0f766e; --warn: #b45309;
+    --off: #64748b; --code-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.7 -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 24px 96px; }
+  header.top { margin-bottom: 32px; }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.4px; }
+  h2 {
+    font-size: 21px; margin: 56px 0 16px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--line);
+  }
+  h3 { font-size: 17px; margin: 0 0 6px; }
+  h4 { font-size: 15px; margin: 0 0 8px; }
+  p { margin: 8px 0; }
+  .muted { color: var(--muted); }
+  .tiny { font-size: 12.5px; }
+  .lede { font-size: 16px; color: #334155; max-width: 76ch; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px; background: var(--code-bg); padding: 1px 5px; border-radius: 4px;
+  }
+  pre {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.5px; background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 8px 0;
+    line-height: 1.55; white-space: pre-wrap; word-break: break-all;
+  }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 22px; box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px;
+    border-radius: 999px; white-space: nowrap;
+  }
+  .badge.ok { background: #ccfbf1; color: var(--ok); }
+  .badge.warn { background: #fef3c7; color: var(--warn); }
+  .badge.off { background: #e2e8f0; color: var(--off); }
+  .method {
+    display: inline-block; font-family: ui-monospace, monospace; font-size: 11.5px;
+    font-weight: 700; padding: 2px 7px; border-radius: 5px;
+  }
+  .method.post { background: #dbeafe; color: #1d4ed8; }
+  .method.get { background: #dcfce7; color: #15803d; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+  .key { font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+  .group { margin: 28px 0 40px; }
+  .hold { font-size: 14px; color: #334155; }
+  .gallery { display: grid; gap: 16px; margin-top: 16px; }
+  .gallery.cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .gallery.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .gallery.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 980px) {
+    .gallery.cols-5 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 620px) {
+    .gallery.cols-5, .gallery.cols-3, .gallery.cols-2 { grid-template-columns: 1fr; }
+  }
+  .card {
+    margin: 0; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .shot {
+    background: repeating-conic-gradient(#eef2f6 0% 25%, #ffffff 0% 50%) 50% / 16px 16px;
+    height: 210px; display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .shot img { max-width: 100%; max-height: 100%; display: block; }
+  .card figcaption { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .pill {
+    font-family: ui-monospace, monospace; font-size: 12px; background: #eef2ff;
+    color: #3730a3; padding: 1px 8px; border-radius: 999px; font-weight: 600;
+  }
+  .label { font-weight: 600; font-size: 14px; }
+  .req { font-size: 11.5px; display: block; }
+  .family { margin: 18px 0; }
+  .media {
+    font-family: ui-monospace, monospace; font-size: 11.5px; font-weight: 500;
+    color: var(--muted); background: var(--code-bg); padding: 1px 7px; border-radius: 4px;
+  }
+  .req-res { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
+  @media (max-width: 760px) { .req-res { grid-template-columns: 1fr; } }
+  .req-res .req { background: #fff7ed; border-color: #fed7aa; }
+  .req-res .res { background: #f0fdfa; border-color: #99f6e4; }
+  .callout {
+    border-left: 4px solid var(--accent); background: #eff6ff; border-radius: 0 10px 10px 0;
+    padding: 14px 18px; margin: 16px 0;
+  }
+  .callout.warn { border-color: var(--warn); background: #fffbeb; }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>生图 API 说明书</h1>
+    <p class="lede">
+      这是 <code>image-gateway</code> 的 <b>中转站（gateway）</b>：客户端只拿一个网关口令，
+      网关自己带上游凭据去调上游生图接口，把出图<b>转存</b>成内容寻址的短 URL 再返回。
+      本文所有参数结论都来自对真实上游的实测（2026-09-24T13:23:43+0800，共 12 次真实生成）。
+    </p>
+  </header>
+
+  <div class="callout">
+    <p class="key">先回答你的问题</p>
+    <p>
+      <b><code>IMAGE_GATEWAY_ACCESS_TOKEN</code> 不是上游的 token，是我们自己网关的门禁口令。</b>
+      它跟上游没有任何关系，是我们签发给客户端用的。
+    </p>
+    <p>这个系统里有<b>两层凭据，方向相反</b>：</p>
+    <table>
+      <tr><th>层</th><th>头</th><th>谁校验</th></tr>
+      <tr>
+        <td>客户端 → 网关</td>
+        <td><code>Authorization: Bearer &lt;IMAGE_GATEWAY_ACCESS_TOKEN&gt;</code></td>
+        <td>我们的网关。不设就是<b>开放代理</b>，谁都能花你的上游额度。</td>
+      </tr>
+      <tr>
+        <td>网关 → 上游</td>
+        <td><code>上游设备头: web-…</code></td>
+        <td>上游。由网关持有，并且会<b>替换</b>客户端传来的同名字段，客户端永远看不到。</td>
+      </tr>
+    </table>
+    <p class="muted tiny">
+      所以网关存在的意义就是：把「上游凭据」这件事从客户端手里拿走。
+      客户端的 token 泄了，你换一个就行，上游凭据不受影响。
+    </p>
+  </div>
+
+  <h2>快速开始</h2>
+  <div class="two-col">
+    <div>
+      <p class="key">请求</p>
+      <pre>curl -X POST http://127.0.0.1:4399/v1/images \
+  -H &quot;Authorization: Bearer $IMAGE_GATEWAY_ACCESS_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;mode&quot;:&quot;image&quot;,&quot;prompt&quot;:&quot;一只柯基犬&quot;,&quot;aspect&quot;:&quot;16:9&quot;}&#x27;</pre>
+    </div>
+    <div>
+      <p class="key">响应（200）</p>
+      <pre>{
+  &quot;id&quot;: &quot;49ee3bee349bd48ce927ef0e712908a4&quot;,
+  &quot;url&quot;: &quot;http://127.0.0.1:4399/files/49ee3bee349bd48ce927ef0e712908a4.png&quot;,
+  &quot;mimeType&quot;: &quot;image/png&quot;,
+  &quot;size&quot;: 1854595,
+  &quot;sha256&quot;: &quot;49ee3bee...c29148&quot;,
+  &quot;cached&quot;: false,
+  &quot;aspect&quot;: &quot;4:3&quot;,
+  &quot;width&quot;: 1184,
+  &quot;height&quot;: 864,
+  &quot;upstream&quot;: {&quot;host&quot;: &quot;upstream.example.com&quot;, &quot;status&quot;: 200, &quot;sourceField&quot;: &quot;image&quot;},
+  &quot;c2pa&quot;: true
+}</pre>
+    </div>
+  </div>
+  <p class="muted tiny">
+    响应里没有内联 base64——那张图有 1.8 MB，内联的话每次都要搬 1.8 MB。
+    这里给的是 <code>/files/&lt;sha256 前 32 位&gt;.png</code>：内容寻址，所以 URL 不可变，
+    可以放心挂一年 <code>Cache-Control: immutable</code>。
+  </p>
+
+  <h2>API 一览</h2>
+  <div class="panel">
+    <table>
+      <tr><th>方法</th><th>路径</th><th>作用</th><th>鉴权</th></tr>
+      
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><code>/v1/images</code></td>
+        <td>生成一张图，返回转存后的短 URL</td>
+        <td class="muted">需要 token</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/v1/images</code></td>
+        <td>最近生成记录，倒序</td>
+        <td class="muted">需要 token</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/v1/images/{id}</code></td>
+        <td>单张图的元数据</td>
+        <td class="muted">需要 token</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/files/{name}</code></td>
+        <td>图片字节，内容寻址、可缓存、支持 Range</td>
+        <td class="muted">默认公开</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/v1/config</code></td>
+        <td>公开契约：限流、上限、是否需要 token</td>
+        <td class="muted">免鉴权</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><code>/__mock__/gateway</code></td>
+        <td>控制面：是否 ready、是否处于「开放」状态</td>
+        <td class="muted">免鉴权</td>
+      </tr>
+    </table>
+  </div>
+
+  <h2>生图参数</h2>
+  <div class="panel">
+    <table>
+      <tr><th>参数</th><th>类型</th><th>结论</th><th>依据</th></tr>
+      
+      <tr>
+        <td><code>mode</code></td>
+        <td class="muted">string</td>
+        <td><span class="badge ok">支持</span></td>
+        <td>最先校验，且只接受 <code>image</code>。其余值一律 <code>400 bad_mode</code>。传非字符串则连应用层都到不了，直接是绑定错误。</td>
+      </tr>
+      <tr>
+        <td><code>prompt</code></td>
+        <td class="muted">string</td>
+        <td><span class="badge ok">支持</span></td>
+        <td>非空字符串。空串 / 纯空白 → <code>400 empty_prompt</code>；非字符串 → 绑定错误。</td>
+      </tr>
+      <tr>
+        <td><code>aspect</code></td>
+        <td class="muted">string</td>
+        <td><span class="badge warn">支持·不校验取值</span></td>
+        <td><b>会被绑定，但取值完全不校验。</b>五个比例实测出真实尺寸；<b>未知比例不报错</b>，回落到 4:3 的画幅。</td>
+      </tr>
+      <tr>
+        <td><code>image</code></td>
+        <td class="muted">string</td>
+        <td><span class="badge ok">支持</span></td>
+        <td><b>真实存在，用于图生图。</b>传 base64 data URL 成功返回 200；传 http URL 则 <code>502 upstream</code>——上游只认 data URL。</td>
+      </tr>
+      <tr>
+        <td><code>model</code></td>
+        <td class="muted">—</td>
+        <td><span class="badge off">不支持（静默忽略）</span></td>
+        <td>传了不报错，也不改变结果：上游 DTO 未绑定该字段。</td>
+      </tr>
+      <tr>
+        <td><code>seed</code></td>
+        <td class="muted">—</td>
+        <td><span class="badge off">不支持（静默忽略）</span></td>
+        <td>同上。图不可复现，换 seed 也没用。</td>
+      </tr>
+      <tr>
+        <td><code>style</code></td>
+        <td class="muted">—</td>
+        <td><span class="badge off">不支持（静默忽略）</span></td>
+        <td>同上。风格只能靠 prompt 描述。</td>
+      </tr>
+      <tr>
+        <td><code>negativePrompt</code></td>
+        <td class="muted">—</td>
+        <td><span class="badge off">不支持（静默忽略）</span></td>
+        <td>同上。没有负向提示词通道。</td>
+      </tr>
+      <tr>
+        <td><code>width</code></td>
+        <td class="muted">—</td>
+        <td><span class="badge off">不支持（静默忽略）</span></td>
+        <td>同上。尺寸只能通过 <code>aspect</code> 控制。</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <p><b>只有四个参数是真的：<code>mode</code>、<code>prompt</code>、<code>aspect</code>、<code>image</code>。</b></p>
+    <p>
+      其余常见名字（<code>model</code>、<code>seed</code>、<code>style</code>、<code>negativePrompt</code>、<code>width</code>）
+      都<b>被静默忽略</b>：不报错、也不起作用。这五个是各花了一次真实生成验证的——
+      上游的 DTO 根本没绑定它们，所以传什么都不影响结果。
+    </p>
+    <p class="muted tiny">
+      注意 <code>aspect</code> 的「不校验」是实测结论，不是偷懒：传 <code>"99:1"</code> 上游照样返回 200，
+      画幅回落到 4:3。所以网关<b>刻意不校验 aspect</b>——本地校验一旦比上游严格，
+      就会把本来能成功的请求判成失败。
+    </p>
+  </div>
+
+  <h2>对照图：不同参数长什么样</h2>
+  <p class="muted">每组只改一个变量，其余全部锁死。所有图片都是真实生成、原样转存，未经处理。</p>
+  
+    <section class="group" id="aspect">
+      <header>
+        <h3>① aspect —— 唯一会改变画幅的参数</h3>
+        <p class="hold"><b>控制变量：</b>提示词完全相同（快乐滑板的美式女孩），只改 aspect。</p>
+        <p class="muted">五张图的画面内容一致，差别只在取景：宽画幅装下更多环境，竖画幅把人放大。注意 4:3 实际是 1184×864，比例 1.3704 而不是 1.3333——上游会为了凑整把边长对齐到 32 的倍数。</p>
+      </header>
+      <div class="gallery cols-5">
+      <figure class="card">
+        <div class="shot"><img src="img/aspect-4x3.png" alt="4:3"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1184×864</span>
+            <span class="muted">比例 1.3704</span></div>
+          <div class="label">4:3</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风…&quot;, &quot;aspect&quot;: &quot;4:3&quot;}</code>
+          <div class="muted tiny">1854595 bytes
+            · sha 49ee3bee349b…</div>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <div class="shot"><img src="img/aspect-1x1.png" alt="1:1"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1024×1024</span>
+            <span class="muted">比例 1.0</span></div>
+          <div class="label">1:1</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风…&quot;, &quot;aspect&quot;: &quot;1:1&quot;}</code>
+          <div class="muted tiny">1745583 bytes
+            · sha 350cd69b6c43…</div>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <div class="shot"><img src="img/aspect-16x9.png" alt="16:9"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1344×768</span>
+            <span class="muted">比例 1.75</span></div>
+          <div class="label">16:9</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风…&quot;, &quot;aspect&quot;: &quot;16:9&quot;}</code>
+          <div class="muted tiny">1753953 bytes
+            · sha 3c649dabfdd1…</div>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <div class="shot"><img src="img/aspect-3x4.png" alt="3:4"></div>
+        <figcaption>
+          <div class="row"><span class="pill">864×1184</span>
+            <span class="muted">比例 0.7297</span></div>
+          <div class="label">3:4</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风…&quot;, &quot;aspect&quot;: &quot;3:4&quot;}</code>
+          <div class="muted tiny">1681541 bytes
+            · sha cf1df977c6d5…</div>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <div class="shot"><img src="img/aspect-9x16.png" alt="9:16"></div>
+        <figcaption>
+          <div class="row"><span class="pill">768×1344</span>
+            <span class="muted">比例 0.5714</span></div>
+          <div class="label">9:16</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风…&quot;, &quot;aspect&quot;: &quot;9:16&quot;}</code>
+          <div class="muted tiny">1701393 bytes
+            · sha e7f5df7d2ea9…</div>
+        </figcaption>
+      </figure></div>
+    </section>
+    <section class="group" id="prompt">
+      <header>
+        <h3>② prompt —— 内容变量</h3>
+        <p class="hold"><b>控制变量：</b>aspect 固定为 4:3，只改 prompt。</p>
+        <p class="muted">三张图尺寸完全一致，画面内容完全不同。这就是提示词的唯一作用：决定画什么，不决定画多大。</p>
+      </header>
+      <div class="gallery cols-3">
+      <figure class="card">
+        <div class="shot"><img src="img/aspect-4x3.png" alt="4:3"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1184×864</span>
+            <span class="muted">比例 1.3704</span></div>
+          <div class="label">滑板女孩（原提示词）</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风…&quot;, &quot;aspect&quot;: &quot;4:3&quot;}</code>
+          <div class="muted tiny">1854595 bytes
+            · sha 49ee3bee349b…</div>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <div class="shot"><img src="img/prompt-5.png" alt="柯基犬"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1184×864</span>
+            <span class="muted">比例 1.3704</span></div>
+          <div class="label">柯基犬</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，…&quot;, &quot;aspect&quot;: &quot;4:3&quot;}</code>
+          <div class="muted tiny">1520903 bytes
+            · sha 582f69a6f9a4…</div>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <div class="shot"><img src="img/prompt-6.png" alt="几何海报"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1184×864</span>
+            <span class="muted">比例 1.3704</span></div>
+          <div class="label">极简几何海报</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;现代极简几何海报，三个交叠的圆形，橙色与青色对比，纯…&quot;, &quot;aspect&quot;: &quot;4:3&quot;}</code>
+          <div class="muted tiny">839081 bytes
+            · sha 7092c6fb2360…</div>
+        </figcaption>
+      </figure></div>
+    </section>
+    <section class="group" id="image">
+      <header>
+        <h3>③ image —— 图生图（参考图）</h3>
+        <p class="hold"><b>控制变量：</b>prompt 与 aspect 完全相同，只在第二次请求里多了 image 字段。</p>
+        <p class="muted">这个字段在抓包里从来没出现过，是探测出来的：传 base64 data URL 会被接受并正常出图，传 http URL 则被上游拒绝（502）——也就是说 <b>参考图必须以 data URL 内联</b>，上游不会替你去下载一个链接。<br><b>但请注意这个结论的边界：</b>这里证明的是「字段被接受且不破坏出图」，<b>不等于</b>「参考图真的影响了成图」。本次用的参考图是一张 128×128 的程序生成占位图，两张结果的差异主要来自生成本身的随机性。要证明影响强度，得拿一张真实照片做 A/B——那是另一次付费实验，本文没有做。</p>
+      </header>
+      <div class="gallery cols-2">
+      <figure class="card">
+        <div class="shot"><img src="img/prompt-5.png" alt="柯基犬"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1184×864</span>
+            <span class="muted">比例 1.3704</span></div>
+          <div class="label">不带参考图</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，…&quot;, &quot;aspect&quot;: &quot;4:3&quot;}</code>
+          <div class="muted tiny">1520903 bytes
+            · sha 582f69a6f9a4…</div>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <div class="shot"><img src="img/image-ref.png" alt="带参考图"></div>
+        <figcaption>
+          <div class="row"><span class="pill">1184×864</span>
+            <span class="muted">比例 1.3704</span></div>
+          <div class="label">带参考图（image = base64 data URL）</div>
+          <code class="req">{&quot;mode&quot;: &quot;image&quot;, &quot;prompt&quot;: &quot;一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，…&quot;, &quot;aspect&quot;: &quot;4:3&quot;, &quot;image&quot;: &quot;data:image/png;base64,&lt;128x128 参考图，见 manifest 说明&gt;&quot;}</code>
+          <div class="muted tiny">1466843 bytes
+            · sha 55b01fb39584…</div>
+        </figcaption>
+      </figure></div>
+    </section>
+
+  <h2>错误码</h2>
+  <p class="muted">实测发现上游有<b>两套完全不同的错误格式</b>，客户端必须都能解析。</p>
+  <div class="panel">
+      <div class="family">
+        <h4>① 绑定错误 — JSON 类型不对 <span class="media">application/problem+json</span></h4>
+        <p>ASP.NET 模型绑定先于应用逻辑，<b>只报告 DTO 顺序里第一个出错的字段</b>，顺序为 <code>mode</code> → <code>prompt</code> → <code>aspect</code>。</p>
+        <div class="req-res">
+          <pre class="req">{&quot;mode&quot;: {}, &quot;prompt&quot;: 123}</pre>
+          <pre class="res">{
+  &quot;type&quot;: &quot;https://tools.ietf.org/html/rfc9110#section-15.5.1&quot;,
+  &quot;title&quot;: &quot;One or more validation errors occurred.&quot;,
+  &quot;status&quot;: 400,
+  &quot;errors&quot;: {
+    &quot;$.mode&quot;: [
+      &quot;The JSON value could not be converted.&quot;
+    ]
+  }
+}</pre>
+        </div>
+      </div>
+      <div class="family">
+        <h4>② 语义错误 — 类型对了，值不对 <span class="media">application/json</span></h4>
+        <p>过了绑定之后才由应用判断，返回扁平信封。</p>
+        <div class="req-res">
+          <pre class="req">{&quot;mode&quot;: &quot;video&quot;}</pre>
+          <pre class="res">{
+  &quot;error&quot;: &quot;bad_mode&quot;
+}</pre>
+        </div>
+      </div></div>
+
+  <div class="panel" style="margin-top:18px">
+    <table>
+      <tr><th>HTTP</th><th>error / 形态</th><th>含义</th><th>格式</th></tr>
+      
+      <tr><td><code>400</code></td><td><code>bad_mode</code></td>
+      <td>mode 不是 image，或缺失</td><td class="muted">扁平</td></tr>
+      <tr><td><code>400</code></td><td><code>empty_prompt</code></td>
+      <td>prompt 为空串或纯空白</td><td class="muted">扁平</td></tr>
+      <tr><td><code>400</code></td><td><code>problem+json</code></td>
+      <td>mode / prompt / aspect 的 JSON 类型不对</td><td class="muted">绑定</td></tr>
+      <tr><td><code>502</code></td><td><code>upstream_error</code></td>
+      <td>image 字段的内容上游用不了</td><td class="muted">扁平</td></tr>
+      <tr><td><code>502</code></td><td><code>upstream</code></td>
+      <td>上游图像服务自己失败了（如 aspect 值畸形）</td><td class="muted">扁平</td></tr>
+    </table>
+  </div>
+
+  <footer class="muted tiny">
+    <p>
+      证据文件：<code>docs/manual/manifest.json</code>（每次调用的请求、响应、实测尺寸与 sha256）。
+      复现：<code>python scripts/collect_manual_assets.py</code>（会真实花钱，先加 <code>--dry-run</code> 看计划）。
+      上游主机与设备头名称已脱敏，实际值见 <code>app/upstream.py</code> 与本机 <code>deploy/*.env</code>。生成时间 2026-09-24T13:23:43+0800。
+    </p>
+  </footer>
+</div>
+</body>
+</html>

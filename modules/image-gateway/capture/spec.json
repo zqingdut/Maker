@@ -1,0 +1,115 @@
+{
+  "_comment": "Parsed from a browser 'Copy all as cURL' dump. Requests only -- no responses were captured. Fields marked inferred are guesses. Redacted: the origin's host, its device header name and its build hashes are replaced by stand-ins, so the spec records the shape of the call rather than where it was aimed.",
+  "sourceFile": "re.txt",
+  "captures": [
+    {
+      "id": "ai-image",
+      "method": "POST",
+      "url": "https://upstream.example.com/api/v1/media/ai/image",
+      "path": "/api/v1/media/ai/image",
+      "headers": {
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+        "Connection": "keep-alive",
+        "Content-Type": "application/json",
+        "Origin": "https://upstream.example.com",
+        "Referer": "https://upstream.example.com/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+        "X-Device-Id": "web-00000000-0000-0000-0000-000000000000",
+        "sec-ch-ua": "\"Google Chrome\";v=\"149\", \"Chromium\";v=\"149\", \"Not)A;Brand\";v=\"24\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "body": {
+        "mode": "image",
+        "prompt": "现代铅笔插画，意大利阿马尔菲海岸复古旅行海报插画，全景海岸悬崖公路场景，经典1960年代敞篷汽车沿着弯曲的海滨公路行驶，主驾驶是一位脸型微胖留着齐刘海的帅小伙，穿着衬衫，露出胸口，副驾驶坐着一位短直发的波兰女孩，黑色头发，穿着婚纱，正欢快地笑着看着帅小伙，带有小帆船的深蓝色地中海，色彩缤纷的粉彩山腰村庄，带有柔软云朵的明亮蓝天，带有鲜艳黄色柠檬的柠檬树枝框定前景，温暖的夏日阳光，大胆鲜艳的色彩，复古1950年代旅行海报风格，电影级构图，高细节，丝网印刷质感，图形插画。手绘风格，带有松散笔触和清晰轮廓的插画。高对比度调色板，保持背景与元素之间的色彩和谐。现代与装饰性美学。",
+        "aspect": "4:3"
+      },
+      "observed": true
+    },
+    {
+      "id": "inlined-png",
+      "method": "UNKNOWN",
+      "url": null,
+      "note": "Exporter replaced the request URL with the request body, so the real target endpoint cannot be recovered. Most likely the generated image being uploaded, or the response image inlined as a data URL.",
+      "bytes": 2160506,
+      "png": {
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.37037,
+        "bitDepth": 8,
+        "colorType": 2,
+        "hasC2PA": true,
+        "chunks": [
+          {
+            "type": "IHDR",
+            "length": 13
+          },
+          {
+            "type": "caBX",
+            "length": 6013
+          },
+          {
+            "type": "IEND",
+            "length": 0
+          }
+        ],
+        "sha256": "56d2a26f5b7a96f06fae2e206e998acfdc6aa564f129ede066734f116523130b"
+      },
+      "observed": true
+    },
+    {
+      "id": "asset-font",
+      "method": "GET",
+      "url": "https://upstream.example.com/assets/Assistant-Regular-00000000.woff2",
+      "path": "/assets/Assistant-Regular-00000000.woff2",
+      "headers": {
+        "Origin": "https://upstream.example.com",
+        "sec-ch-ua-platform": "\"macOS\"",
+        "Referer": "https://upstream.example.com/assets/index-00000000.css",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Google Chrome\";v=\"149\", \"Chromium\";v=\"149\", \"Not)A;Brand\";v=\"24\"",
+        "sec-ch-ua-mobile": "?0"
+      },
+      "note": "Response body not captured; the mock serves a configurable placeholder.",
+      "observed": true
+    }
+  ],
+  "probe": {
+    "_comment": "Live probes against the real service. No image was ever generated.",
+    "server": "Kestrel",
+    "backend": "ASP.NET Core",
+    "observations": [
+      {
+        "request": "OPTIONS /api/v1/media/ai/image",
+        "status": 204,
+        "note": "No CORS headers returned (same-origin app, none needed)."
+      },
+      {
+        "request": "POST /api/v1/media/ai/image  body={}",
+        "status": 400,
+        "body": {
+          "error": "bad_mode"
+        },
+        "note": "Flat snake_case error envelope, no wrapper. mode is validated first."
+      },
+      {
+        "request": "POST /api/v1/__nope__",
+        "status": 405,
+        "headers": {
+          "Allow": "GET, HEAD"
+        },
+        "note": "Non-route POST is rejected by the static-file handler."
+      },
+      {
+        "request": "GET /api/v1/__nope__",
+        "status": 200,
+        "contentType": "text/html",
+        "note": "SPA fallback: unmatched GET returns index.html, not 404/405."
+      }
+    ]
+  }
+}

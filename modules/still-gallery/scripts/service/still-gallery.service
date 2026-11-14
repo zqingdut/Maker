@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────────────
+# Still Gallery — systemd unit 模板（Linux）
+#
+# 不要直接改这个文件然后 cp 到 /etc/systemd/system/ —— 里面的 @@...@@
+# 占位符需要被替换。请用安装脚本：
+#
+#     sudo ./scripts/service/install-service.sh
+#
+# 它会把占位符替换好、装到正确的位置、enable 并启动。
+# ─────────────────────────────────────────────────────────────────────
+
+[Unit]
+Description=Still Gallery (零依赖 Node 生图画廊)
+Documentation=file:@@PROJECT@@/README.md
+# 等网络就绪：生成功能要出网访问火山方舟，开机瞬间可能还没 DNS。
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@@RUN_USER@@
+Group=@@RUN_GROUP@@
+WorkingDirectory=@@PROJECT@@
+
+# 兜底值。注意顺序：systemd 按出现顺序应用，后出现的覆盖先出现的，
+# 所以 EnvironmentFile 放在 Environment 之后 —— 让 env 文件里的同名变量优先。
+Environment=DATA_DIR=@@DATA_DIR@@
+Environment=HOST=@@HOST@@
+Environment=PORT=@@PORT@@
+# 环境变量从文件注入 —— 本项目**不读 .env**，必须由 systemd 送进进程环境。
+# 前缀 `-` 表示文件不存在也不报错（此时服务能起，但生图会因缺 API Key 而 503）。
+EnvironmentFile=-@@ENV_FILE@@
+
+ExecStart=@@NODE@@ @@PROJECT@@/server.mjs
+
+# 只在**异常退出**时重启。server.mjs 收到 SIGTERM 会以 0 退出，
+# 所以 `systemctl stop` 不会被 Restart 立刻撤销。
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGTERM
+# 留出时间让 fire-and-forget 的写盘（metrics.json）落完；服务自己会在 1 秒内退出。
+TimeoutStopSec=20
+# 进程被杀时不留 core dump（画廊数据里有提示词，没必要落盘）
+LimitCORE=0
+
+# ── 基础加固（这两条与路径无关，任何布局下都安全）────────────────────
+NoNewPrivileges=true
+PrivateTmp=true
+
+# ── 更强的加固（默认注释掉）──────────────────────────────────────────
+# 下面几条限制文件系统写权限。它们在标准布局下没问题，但如果你的项目或数据
+# 目录落在非常规位置（比如挂载在 /mnt 的盘、符号链接出去的目录），会导致服务
+# 起不来、且报错信息不直观。确认过布局再启用，并保证 ReadWritePaths 覆盖
+# DATA_DIR 与日志目录。
+#
+# ProtectSystem=full
+# ProtectHome=read-only
+# ReadWritePaths=@@DATA_DIR@@
+# PrivateDevices=true
+# ProtectKernelTunables=true
+# ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target

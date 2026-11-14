@@ -1,0 +1,33 @@
+[Unit]
+Description=image-gateway -- upstream media API relay and image gateway
+Documentation=file:@@PROJECT_DIR@@/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# A --user unit runs inside your login session, so there is no User=/Group=
+# here: it already runs as you. Adding them makes systemd reject the unit.
+
+WorkingDirectory=@@PROJECT_DIR@@
+
+# Leading '-' = tolerate a missing file; the wrapper reports the problem far
+# more clearly than systemd would.
+EnvironmentFile=-@@ENV_FILE@@
+
+Environment=PYTHONUNBUFFERED=1
+
+ExecStart=@@PROJECT_DIR@@/deploy/image-gateway-service.sh
+
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=20
+
+NoNewPrivileges=true
+
+[Install]
+# default.target, not multi-user.target: a user unit has no multi-user.target.
+# Reaching this at boot also needs `loginctl enable-linger <user>`, because a
+# user manager normally only exists while you are logged in.
+WantedBy=default.target

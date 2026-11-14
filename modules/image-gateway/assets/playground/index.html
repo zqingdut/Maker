@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>提示词生图 · image relay</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --panel: #ffffff; --ink: #16202b; --muted: #64748b;
+    --line: #e2e8f0; --accent: #2563eb; --ok: #0f766e; --warn: #b45309;
+    --bad: #b91c1c; --code-bg: #f1f5f9; --accent-soft: #eff6ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.7 -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+  header.top { margin-bottom: 20px; }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.3px; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  p { margin: 6px 0; }
+  .muted { color: var(--muted); }
+  .tiny { font-size: 12.5px; }
+  .lede { font-size: 15px; color: #334155; max-width: 78ch; }
+  code, pre, .mono {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  code { font-size: 12.5px; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre {
+    font-size: 12.5px; background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 8px 0;
+    line-height: 1.55; white-space: pre-wrap; word-break: break-all;
+  }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 20px; box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    font-size: 12.5px; padding: 3px 10px; border-radius: 999px;
+    background: #eef2f6; color: #475569; border: 1px solid var(--line);
+  }
+  .chip.ok { background: #ccfbf1; color: var(--ok); border-color: #99f6e4; }
+  .chip.warn { background: #fef3c7; color: var(--warn); border-color: #fde68a; }
+  .chip.bad { background: #fee2e2; color: var(--bad); border-color: #fecaca; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  label.field { display: block; margin: 14px 0 0; }
+  label.field > .cap {
+    display: block; font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--muted); font-weight: 600; margin-bottom: 6px;
+  }
+  textarea, input[type=text], input[type=password] {
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink);
+    background: #fff; border: 1px solid var(--line); border-radius: 9px;
+    padding: 10px 12px; resize: vertical;
+  }
+  textarea { min-height: 108px; line-height: 1.6; }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg label {
+    position: relative; cursor: pointer; font-size: 13px;
+    border: 1px solid var(--line); background: #fff; border-radius: 9px;
+    padding: 7px 11px; display: flex; flex-direction: column; gap: 1px; line-height: 1.25;
+  }
+  .seg label:hover { border-color: #cbd5e1; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label .r { font-weight: 600; }
+  .seg label .s { font-size: 11px; color: var(--muted); }
+  .seg input:checked + .r { color: var(--accent); }
+  .seg label:has(input:checked) {
+    border-color: var(--accent); background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent) inset;
+  }
+
+  .btn {
+    font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    border-radius: 10px; padding: 11px 20px;
+  }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn.ghost { background: #fff; color: var(--ink); border-color: var(--line); font-weight: 500; }
+  .btn.ghost:hover:not(:disabled) { border-color: #cbd5e1; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; }
+
+  details.opt { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  details.opt > summary {
+    cursor: pointer; padding: 10px 14px; font-size: 13.5px; font-weight: 600; color: #334155;
+    list-style: none;
+  }
+  details.opt > summary::-webkit-details-marker { display: none; }
+  details.opt > summary::before { content: "▸ "; color: var(--muted); }
+  details.opt[open] > summary::before { content: "▾ "; }
+  details.opt .body { padding: 0 14px 14px; border-top: 1px solid var(--line); }
+
+  .notice {
+    border-left: 4px solid var(--accent); background: var(--accent-soft);
+    border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 14px 0;
+  }
+  .notice.warn { border-color: var(--warn); background: #fffbeb; }
+  .notice.bad { border-color: var(--bad); background: #fef2f2; }
+
+  #stage {
+    background: repeating-conic-gradient(#eef2f6 0% 25%, #ffffff 0% 50%) 50% / 16px 16px;
+    border: 1px solid var(--line); border-radius: 10px;
+    min-height: 260px; display: flex; align-items: center; justify-content: center;
+    padding: 12px; overflow: hidden;
+  }
+  #stage img { max-width: 100%; max-height: 460px; display: block; border-radius: 4px; }
+  #stage .hint { color: var(--muted); font-size: 13.5px; text-align: center; padding: 20px; }
+  .spin {
+    width: 22px; height: 22px; border: 3px solid #cbd5e1; border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite; display: inline-block;
+    vertical-align: -4px; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  table.meta { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 14px; }
+  table.meta th, table.meta td {
+    text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top;
+  }
+  table.meta th { width: 92px; color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  table.meta tr:last-child th, table.meta tr:last-child td { border-bottom: none; }
+  table.meta td { word-break: break-all; }
+
+  .hist { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; }
+  .hist button {
+    flex: 0 0 auto; padding: 0; border: 1px solid var(--line); background: #fff;
+    border-radius: 9px; overflow: hidden; cursor: pointer; width: 104px; height: 104px;
+  }
+  .hist button:hover { border-color: var(--accent); }
+  .hist img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hist .empty { color: var(--muted); font-size: 13.5px; }
+
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>提示词生图</h1>
+    <p class="lede">
+      输入提示词，网关带上游凭据调上游生图接口真实生成，
+      把图片<b>转存</b>成本机的内容寻址短 URL 再返回给你。
+      <b>每次点击都会真实出图并计费。</b>
+    </p>
+    <div class="chips" id="chips">
+      <span class="chip">正在读取配置…</span>
+    </div>
+  </header>
+
+  <div class="notice bad hidden" id="fileWarning">
+    <b>这个页面是通过 <code>file://</code> 打开的，无法调用网关。</b>
+    请访问 <code>http://127.0.0.1:4399/playground</code>。
+  </div>
+
+  <div class="grid">
+
+    <!-- ============ 左：输入 ============ -->
+    <section class="panel">
+      <h2>生成参数</h2>
+
+      <label class="field" id="tokenField">
+        <span class="cap">网关口令 · X-Relay-Token</span>
+        <input type="password" id="token" placeholder="IMAGE_GATEWAY_ACCESS_TOKEN 的值" autocomplete="off">
+        <span class="tiny muted">
+          只存在你本机的 localStorage，随请求发给网关。<b>它不是上游的凭据</b>——
+          上游凭据由网关自己持有，你永远看不到。
+        </span>
+      </label>
+
+      <label class="field">
+        <span class="cap">提示词 · prompt</span>
+        <textarea id="prompt" placeholder="例如：快乐滑板的美式女孩，街头摄影，逆光">快乐滑板的美式女孩</textarea>
+        <span class="tiny muted" id="promptCount"></span>
+      </label>
+
+      <div class="field" style="margin-top:14px">
+        <span class="cap" style="display:block;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;margin-bottom:6px">
+          画幅 · aspect
+        </span>
+        <div class="seg" id="aspectSeg"></div>
+        <span class="tiny muted">
+          尺寸是<b>实测值</b>：上游每条边都对齐到 32 的倍数，所以 4:3 实际是 1184×864（1.3704，不是 1.3333）。
+          传未知比例<b>不报错</b>，会回落到 4:3。
+        </span>
+      </div>
+
+      <label class="field hidden" id="customAspectField">
+        <span class="cap">自定义 aspect 值</span>
+        <input type="text" id="customAspect" placeholder="例如 99:1" value="99:1">
+        <span class="tiny muted">用来验证「上游不校验 aspect 取值」这个结论。</span>
+      </label>
+
+      <details class="opt">
+        <summary>参考图 · image（图生图，可选）</summary>
+        <div class="body">
+          <p class="tiny muted" style="margin-top:12px">
+            会转成 base64 data URL 内联进请求。上游<b>只认 data URL</b>，传 http 链接会被拒（502）。
+          </p>
+          <input type="file" id="refFile" accept="image/*">
+          <p class="tiny muted" id="refInfo">未选择参考图。</p>
+        </div>
+      </details>
+
+      <div class="actions">
+        <button class="btn" id="go">生成真实图片</button>
+        <button class="btn ghost" id="copyCurl" type="button">复制等价 curl</button>
+        <span class="tiny muted" id="status"></span>
+      </div>
+    </section>
+
+    <!-- ============ 右：结果 ============ -->
+    <section class="panel">
+      <h2>生成结果</h2>
+      <div id="stage"><div class="hint">还没有生成。左边填好提示词，点「生成真实图片」。</div></div>
+      <div id="errorBox" class="notice bad hidden"></div>
+      <table class="meta hidden" id="metaTable"></table>
+      <div id="rawBox" class="hidden">
+        <p class="tiny muted" style="margin-top:14px">原始响应</p>
+        <pre id="raw"></pre>
+      </div>
+    </section>
+  </div>
+
+  <section style="margin-top:28px">
+    <h2>本次会话生成记录</h2>
+    <p class="tiny muted">
+      来自 <code>GET /v1/images</code>（服务端记录，不是浏览器本地缓存），
+      所以刷新页面也在。内容寻址存储：同一张图重复出现会标 <code>cached</code>。
+    </p>
+    <div class="hist" id="hist"><span class="empty">暂无记录。</span></div>
+  </section>
+
+  <footer class="muted tiny">
+    <p>
+      网关：<code>image-gateway</code> 中转站 ·
+      上游 <code id="footerUpstream">—</code> ·
+      <a href="/v1/config">/v1/config</a> ·
+      <a href="/__mock__/docs">/__mock__/docs</a> ·
+      参数结论与对照图见 <a href="/manual/">说明书</a>
+    </p>
+    <p>
+      这个页面本身只是 <code>assets/playground/index.html</code> 一个静态文件，
+      不含任何密钥；所有请求都由浏览器直接发给网关。
+    </p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var TOKEN_KEY = "image-gateway-token";
+
+  //: The five ratios with a *measured* output size. Anything else falls back to
+  //: 4:3 upstream, so offering only these keeps the UI honest about what it can
+  //: actually produce.
+  var ASPECTS = [
+    { value: "1:1",  size: "1024×1024" },
+    { value: "4:3",  size: "1184×864" },
+    { value: "3:4",  size: "864×1184" },
+    { value: "16:9", size: "1344×768" },
+    { value: "9:16", size: "768×1344" },
+    { value: "__custom__", size: "自己填" }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { aspect: "4:3", refDataUrl: null, refName: null, busy: false, config: null };
+
+  // ---- aspect segmented control -----------------------------------------
+  function renderAspects() {
+    var seg = $("aspectSeg");
+    seg.innerHTML = "";
+    ASPECTS.forEach(function (a) {
+      var label = document.createElement("label");
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "aspect";
+      input.value = a.value;
+      if (a.value === state.aspect) { input.checked = true; }
+      input.addEventListener("change", function () {
+        state.aspect = a.value;
+        $("customAspectField").classList.toggle("hidden", a.value !== "__custom__");
+      });
+      var r = document.createElement("span");
+      r.className = "r";
+      r.textContent = a.value === "__custom__" ? "自定义" : a.value;
+      var s = document.createElement("span");
+      s.className = "s";
+      s.textContent = a.size;
+      label.appendChild(input);
+      label.appendChild(r);
+      label.appendChild(s);
+      seg.appendChild(label);
+    });
+  }
+
+  function chosenAspect() {
+    if (state.aspect === "__custom__") {
+      return $("customAspect").value.trim();
+    }
+    return state.aspect;
+  }
+
+  // ---- config ------------------------------------------------------------
+  function loadConfig() {
+    return fetch("/v1/config", { headers: authHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (cfg) {
+        state.config = cfg;
+        paintChips(cfg);
+        $("tokenField").classList.toggle("hidden", !cfg.auth || !cfg.auth.required);
+        return cfg;
+      })
+      .catch(function () {
+        $("chips").innerHTML = '<span class="chip bad">读不到 /v1/config</span>';
+      });
+  }
+
+  function paintChips(cfg) {
+    var chips = [];
+    if (!cfg.gatewayEnabled) {
+      chips.push(["bad", "网关已关闭"]);
+    } else if (!cfg.ready) {
+      chips.push(["bad", "未配置上游 · 会返回 503"]);
+    } else {
+      chips.push(["ok", "就绪"]);
+    }
+    chips.push(["", cfg.upstream ? "上游 " + cfg.upstream : "上游：给出口令后显示"]);
+    if (cfg.auth && cfg.auth.required) { chips.push(["warn", "需要口令"]); }
+    else { chips.push(["warn", "无需口令 · 开放状态"]); }
+    var lim = (cfg.limits || {}).rateLimitPerMinute || 0;
+    chips.push(["", lim > 0 ? "限流 " + lim + "/分钟" : "未限流"]);
+    // Same shape as the rate-limit chip above, and for the same reason: `|| "?"`
+    // would print "?" for a limit of 0, which means *no* limit, not *unknown*.
+    var pmax = (cfg.limits || {}).maxPromptChars || 0;
+    chips.push(["", pmax > 0 ? "提示词上限 " + pmax + " 字" : "提示词未设上限"]);
+
+    $("chips").innerHTML = chips.map(function (c) {
+      return '<span class="chip ' + c[0] + '">' + esc(c[1]) + "</span>";
+    }).join("");
+
+    // The host is configuration, not a constant: an instance with no upstream
+    // configured must not advertise one, and one that hides it behind a token
+    // must say so rather than claim it has none.
+    $("footerUpstream").textContent =
+      cfg.upstream || (cfg.ready ? "需口令后显示" : "未配置");
+  }
+
+  // ---- helpers -----------------------------------------------------------
+  function esc(s) {
+    return String(s === null || s === undefined ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function authHeaders() {
+    var t = $("token").value.trim();
+    return t ? { "X-Relay-Token": t } : {};
+  }
+
+  function human(bytes) {
+    if (!bytes && bytes !== 0) { return "—"; }
+    if (bytes < 1024) { return bytes + " B"; }
+    if (bytes < 1024 * 1024) { return (bytes / 1024).toFixed(1) + " KB"; }
+    return (bytes / 1048576).toFixed(2) + " MB";
+  }
+
+  // ---- reference image ---------------------------------------------------
+  $("refFile").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) { state.refDataUrl = null; state.refName = null; $("refInfo").textContent = "未选择参考图。"; return; }
+    if (file.size > 8 * 1024 * 1024) {
+      state.refDataUrl = null;
+      $("refInfo").innerHTML = '<b style="color:var(--bad)">文件超过 8 MB，请换一张更小的。</b>';
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      state.refDataUrl = reader.result;
+      state.refName = file.name;
+      $("refInfo").innerHTML = "已选择 <b>" + esc(file.name) + "</b>（" + human(file.size) +
+        "），将以 data URL 内联发送。";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ---- prompt counter ----------------------------------------------------
+  // Over the limit is not an error any more -- the gateway truncates -- but a
+  // silent cut produces an image that ignores the tail of the prompt, so say it
+  // before the call rather than after.
+  function promptMax() {
+    // Not `|| 4000`: an explicit 0 means "no limit", and `||` would quietly turn
+    // it into a 4000-character cap the operator never asked for. Fall back only
+    // when the value is genuinely absent (config not loaded yet).
+    var lim = ((state.config || {}).limits || {}).maxPromptChars;
+    return typeof lim === "number" ? lim : 4000;
+  }
+
+  function updatePromptCount() {
+    var max = promptMax();
+    var len = $("prompt").value.length;
+    var over = max > 0 && len > max;
+    var el = $("promptCount");
+    el.textContent = max > 0
+      ? len + " / " + max + " 字" + (over ? " · 超出 " + (len - max) + " 字，会被截断" : "")
+      : len + " 字 · 未设上限";
+    el.style.color = over ? "#b3261e" : "";
+  }
+  $("prompt").addEventListener("input", updatePromptCount);
+
+  // ---- generate ----------------------------------------------------------
+  function buildBody() {
+    var body = { mode: "image", prompt: $("prompt").value, aspect: chosenAspect() };
+    if (state.refDataUrl) { body.image = state.refDataUrl; }
+    return body;
+  }
+
+  // 失败原因的人话解释。
+  //
+  // 网关的错误体刻意只有 {"error":"<code>"}——那是对原站信封的忠实重建，不能凭空
+  // 加原站没发过的字段。所以解释放在页面这边：写给人看的是"发生了什么、该改什么"，
+  // 而不是让用户去猜一个英文错误码。
+  var FAILURES = {
+    bad_body: ["请求体不是合法的 JSON 对象。", '要发 {"mode","prompt","aspect"}，Content-Type 用 application/json。'],
+    bad_request: ["某个字段的类型不对。", "mode / prompt / aspect 都必须是字符串。"],
+    bad_mode: ["mode 不被支持。", '只接受 "image"。'],
+    empty_prompt: ["提示词是空的。", "空白字符不算内容。"],
+    prompt_too_long: ["提示词超出字数上限。", "改短一点，或调大 IMAGE_GATEWAY_MAX_PROMPT_CHARS。默认是截断而不是报错。"],
+    missing_token: ["网关要求口令。", "填上页面顶部的口令，或让服务端清空 IMAGE_GATEWAY_ACCESS_TOKEN。"],
+    invalid_token: ["口令不对。", "和 IMAGE_GATEWAY_ACCESS_TOKEN 核对一下。"],
+    unauthorized: ["没有权限（401）。", "检查口令或设备凭据。"],
+    forbidden: ["被拒绝访问（403）。", "凭据有效但没权限，检查上游账号状态。"],
+    rate_limited: ["请求太频繁，被限流了。", "稍等再试——下面会给出 Retry-After 秒数。也可以调大 IMAGE_GATEWAY_RATE_LIMIT_PER_MINUTE。"],
+    missing_device: ["请求没带设备标识。", "这个接口按设备鉴权，通常由网关自己补上。"],
+    bad_device: ["设备标识格式不对。", "见 IMAGE_GATEWAY_DEVICE_PATTERN。"],
+    gateway_disabled: ["网关模式没开。", "设 IMAGE_GATEWAY_GATEWAY_ENABLED=true。"],
+    no_upstream: ["没有配置上游。", "把 IMAGE_GATEWAY_UPSTREAM 指向真正的上游。"],
+    upstream_error: ["上游报错，或者根本连不上。", "检查上游地址，以及它的设备凭据是否还有效。"],
+    upstream_bad_image_url: ["上游给的图片地址不在允许的范围内。", "网关只从配置的上游主机取图，地址可能被改过。"],
+    upstream_unavailable: ["上游暂时不可用。", "通常是上游在维护或过载，稍后重试。"],
+    upstream_timeout: ["上游超时没返回。", "调大 IMAGE_GATEWAY_RELAY_TIMEOUT_S，或者直接重试——上游可能只是慢。"],
+    upstream_no_image: ["上游返回了，但没有可用的图片。", "它的响应结构可能变了，看下面的原始响应。"],
+    upstream_bad_image: ["上游返回的字节解不出图片。", "多半是把错误页当成图片存下来了，看下面的原始响应。"],
+    upstream_busy: ["同时在跑的生成太多，排队超时。", "调大 IMAGE_GATEWAY_MAX_CONCURRENT_UPSTREAM，或稍等再试。"],
+    payload_too_large: ["请求体超过大小上限。", "见 IMAGE_GATEWAY_MAX_BODY_BYTES。"],
+    bad_payload: ["参考图不是可用的 data URL。", '要 "data:image/...;base64,..." 这种形式。'],
+    bad_style: ["X-Mock-Style 取值不认识。", "可用 inline / url / openai。"],
+    bad_variant: ["X-Mock-Variant 取值不认识。", "可用 captured / placeholder。"],
+    bad_fail_directive: ["X-Mock-Fail 不是状态码。", '填数字，或 "off"。'],
+    bad_delay_directive: ["X-Mock-Delay 不是整数。", "单位是毫秒，例如 200。"],
+    not_found: ["这个 id 下没有存图片。", "先生成一张。"],
+    unknown_generation: ["这个资源从没生成过。", "id 和磁盘上的对不上。"],
+    asset_not_captured: ["这个静态资源不在抓包里。", "见 IMAGE_GATEWAY_ASSET_MISS。"],
+    internal_error: ["网关内部异常。", "服务端日志里有 traceback。"],
+    no_image_url: ["网关说成功了，但响应里没有图片地址。", "多半是上游改了响应结构，看下面的原始响应。"],
+    image_unreachable: ["图片地址有了，但字节没取到。", "文件可能被移出 data/，或资源路由返回了 404。"],
+    network_error: ["根本没连上网关。", "服务在跑吗？也可能是代理拦了 localhost。"],
+    client_timeout: ["页面等了 120 秒，放弃了。", "上游可能还在跑，看 /__mock__/requests。"]
+  };
+
+  function explainFailure(code, status) {
+    if (code && FAILURES[code]) { return FAILURES[code]; }
+    if (status && status >= 500) { return ["网关或上游出错了。", "看下面的原始响应和服务端日志。"]; }
+    if (status && status >= 400) { return ["请求被拒绝了。", "原始响应里带着错误码。"]; }
+    return ["请求没有成功。", "看下面的原始响应。"];
+  }
+
+  function showError(status, code, note, extra, relayed, retryAfter) {
+    var why = explainFailure(code, status === "—" ? null : status);
+    var box = $("errorBox");
+    box.classList.remove("hidden");
+    box.innerHTML =
+      "<p><b>生成失败" + (status === "—" ? "" : " · HTTP " + esc(status)) +
+        (relayed ? " · 上游 HTTP " + esc(relayed) : "") + "</b></p>" +
+      (code ? "<p>错误码：<code>" + esc(code) + "</code></p>" : "") +
+      "<p>" + esc(why[0]) + "</p>" +
+      (why[1] ? '<p class="tiny">' + esc(why[1]) + "</p>" : "") +
+      (retryAfter ? '<p class="tiny">' + esc(retryAfter) + " 秒后可重试（Retry-After）。</p>" : "") +
+      (note ? '<p class="tiny">网关注记：<code>' + esc(note) + "</code></p>" : "") +
+      (extra ? "<p class=\"tiny\">" + esc(extra) + "</p>" : "");
+  }
+
+  function clearError() { $("errorBox").classList.add("hidden"); }
+
+  function generate() {
+    if (state.busy) { return; }
+    var body = buildBody();
+    if (!body.prompt || !body.prompt.trim()) {
+      showError("—", "empty_prompt", "提示词不能为空", "上游要求 prompt 是非空字符串。");
+      return;
+    }
+    if (state.config && state.config.auth && state.config.auth.required && !$("token").value.trim()) {
+      showError("—", "missing_token", "需要先填网关口令", "网关设了 IMAGE_GATEWAY_ACCESS_TOKEN。");
+      return;
+    }
+
+    state.busy = true;
+    clearError();
+    $("metaTable").classList.add("hidden");
+    $("rawBox").classList.add("hidden");
+    $("go").disabled = true;
+
+    var t0 = performance.now();
+    var timer = setInterval(function () {
+      $("status").textContent = "生成中… " + ((performance.now() - t0) / 1000).toFixed(1) + "s";
+    }, 100);
+    $("stage").innerHTML = '<div class="hint"><span class="spin"></span>正在调用上游真实生成，通常 8–15 秒…</div>';
+
+    var ctl = new AbortController();
+    var abort = setTimeout(function () { ctl.abort(); }, 120000);
+
+    fetch("/v1/images", {
+      method: "POST",
+      headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+      body: JSON.stringify(body),
+      signal: ctl.signal
+    }).then(function (res) {
+      var note = res.headers.get("x-mock-error-note");
+      var relayed = res.headers.get("x-relay-upstream-status");
+      return res.text().then(function (text) {
+        var data = null;
+        try { data = JSON.parse(text); } catch (e) { data = null; }
+        return { res: res, data: data, text: text, note: note, relayed: relayed };
+      });
+    }).then(function (r) {
+      var secs = ((performance.now() - t0) / 1000).toFixed(1);
+      $("status").textContent = "";
+
+      if (!r.res.ok) {
+        var code = r.data && r.data.error ? r.data.error : null;
+        var detail = r.data && r.data.errors
+          ? "绑定错误：" + JSON.stringify(r.data.errors)
+          : (r.data ? null : r.text.slice(0, 300));
+        showError(r.res.status, code, r.note, detail, r.relayed, r.res.headers.get("retry-after"));
+        $("stage").innerHTML = '<div class="hint">没有生成图片。</div>';
+        $("raw").textContent = r.text;
+        $("rawBox").classList.remove("hidden");
+        return;
+      }
+
+      renderResult(r.data, secs, r.relayed);
+      loadHistory();
+    }).catch(function (err) {
+      $("status").textContent = "";
+      if (err && err.name === "AbortError") {
+        showError("—", "client_timeout", "超过 120 秒未返回", "网关的出站超时是 IMAGE_GATEWAY_RELAY_TIMEOUT_S。");
+      } else {
+        showError("—", "network_error", String(err && err.message ? err.message : err), "网关没在跑，或者被代理拦了。");
+      }
+      $("stage").innerHTML = '<div class="hint">没有生成图片。</div>';
+    }).then(function () {
+      clearTimeout(abort);
+      clearInterval(timer);
+      state.busy = false;
+      $("go").disabled = false;
+    });
+  }
+
+  function renderResult(d, secs, relayedStatus) {
+    // A 200 without a usable URL is still a failed generation as far as the
+    // person waiting is concerned, so it gets the same treatment as an error
+    // rather than an empty stage.
+    if (!d || !d.url) {
+      showError("—", "no_image_url", null,
+        "网关返回 200，但里面没有 url：" + JSON.stringify(d).slice(0, 200));
+      $("stage").innerHTML = '<div class="hint">没有拿到图片地址。</div>';
+      return;
+    }
+
+    var img = document.createElement("img");
+    img.alt = d.prompt || "生成结果";
+    // Cache-buster is unnecessary: the URL is content-addressed and immutable.
+    img.src = d.url;
+    // The bytes can fail to arrive even though the metadata did: the file may
+    // have been moved out of data/, or the asset route may 404. Without this the
+    // page shows a broken-image icon and says nothing -- which is exactly the
+    // "it failed and I cannot tell why" case this is meant to remove.
+    img.onerror = function () {
+      showError("—", "image_unreachable", null,
+        "地址是 " + d.url + "，但字节没取到（文件可能被移走，或资源路由 404）。");
+      $("stage").innerHTML = '<div class="hint">图片没有加载出来。</div>';
+    };
+    $("stage").innerHTML = "";
+    $("stage").appendChild(img);
+
+    var dims = (d.width && d.height) ? d.width + " × " + d.height : "—";
+    var rows = [
+      ["耗时", secs + " 秒"],
+      ["尺寸", dims + (d.aspect ? "  ·  aspect " + d.aspect : "")],
+      ["体积", human(d.size)],
+      ["上游", (d.upstream && d.upstream.host ? d.upstream.host : "—") +
+        (relayedStatus ? " · HTTP " + relayedStatus : "") +
+        (d.upstream && d.upstream.sourceField ? " · 图片在 " + d.upstream.sourceField + " 字段" : "")],
+      ["存储", d.cached ? "命中已有文件（内容相同，cached）" : "新写入"],
+      ["C2PA", d.c2pa ? "有（真实生成产物的签名）" : "无"],
+      ["id", d.id || "—"],
+      ["sha256", d.sha256 || "—"],
+      ["提示词", d.prompt || "—"],
+      ["URL", d.url || "—"]
+    ];
+    if (d.promptTruncated) {
+      rows.push(["截断", "提示词超过上限，已截断后生成（见 X-Prompt-Truncated）"]);
+    }
+    $("metaTable").innerHTML = rows.map(function (r) {
+      return "<tr><th>" + esc(r[0]) + "</th><td>" + esc(r[1]) + "</td></tr>";
+    }).join("");
+    $("metaTable").classList.remove("hidden");
+
+    $("raw").textContent = JSON.stringify(d, null, 2);
+    $("rawBox").classList.remove("hidden");
+  }
+
+  // ---- history -----------------------------------------------------------
+  function loadHistory() {
+    fetch("/v1/images?limit=24", { headers: authHeaders() })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.items) { return; }
+        var hist = $("hist");
+        if (!data.items.length) {
+          hist.innerHTML = '<span class="empty">暂无记录。</span>';
+          return;
+        }
+        hist.innerHTML = "";
+        data.items.forEach(function (it) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.title = (it.prompt || "") + "\n" + (it.width || "?") + "×" + (it.height || "?") +
+            "  " + (it.aspect || "") + "\n" + (it.createdAt || "");
+          var im = document.createElement("img");
+          im.src = it.url;
+          im.alt = it.prompt || "历史记录";
+          b.appendChild(im);
+          b.addEventListener("click", function () {
+            $("stage").innerHTML = "";
+            var big = document.createElement("img");
+            big.src = it.url;
+            $("stage").appendChild(big);
+            clearError();
+            var dims = (it.width && it.height) ? it.width + " × " + it.height : "—";
+            $("metaTable").innerHTML = [
+              ["尺寸", dims + (it.aspect ? "  ·  aspect " + it.aspect : "")],
+              ["体积", human(it.size)],
+              ["存储", it.cached ? "命中已有文件" : "—"],
+              ["C2PA", it.c2pa ? "有" : "无"],
+              ["id", it.id || "—"],
+              ["sha256", it.sha256 || "—"],
+              ["提示词", it.prompt || "—"],
+              ["URL", it.url || "—"]
+            ].map(function (r) {
+              return "<tr><th>" + esc(r[0]) + "</th><td>" + esc(r[1]) + "</td></tr>";
+            }).join("");
+            $("metaTable").classList.remove("hidden");
+            $("rawBox").classList.add("hidden");
+            $("status").textContent = "正在查看历史记录，未重新生成。";
+          });
+          hist.appendChild(b);
+        });
+      })
+      .catch(function () { /* history is best-effort */ });
+  }
+
+  // ---- copy curl ---------------------------------------------------------
+  function copyCurl() {
+    var body = buildBody();
+    var shown = Object.assign({}, body);
+    if (shown.image) { shown.image = shown.image.slice(0, 48) + "…(data URL 截断)"; }
+    var origin = location.origin && location.origin !== "null" ? location.origin : "http://127.0.0.1:4399";
+    var text = "curl -X POST " + origin + "/v1/images \\\n" +
+      '  -H "X-Relay-Token: $IMAGE_GATEWAY_ACCESS_TOKEN" \\\n' +
+      '  -H "Content-Type: application/json" \\\n' +
+      "  -d '" + JSON.stringify(shown) + "'";
+    var done = function () { $("status").textContent = "curl 已复制到剪贴板。"; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); done(); }
+    catch (e) { $("status").textContent = "复制失败，请手动选中上面的 curl。"; }
+    document.body.removeChild(ta);
+  }
+
+  // ---- wire up -----------------------------------------------------------
+  renderAspects();
+
+  var saved = null;
+  try { saved = localStorage.getItem(TOKEN_KEY); } catch (e) { saved = null; }
+  if (saved) { $("token").value = saved; }
+
+  $("token").addEventListener("change", function () {
+    try { localStorage.setItem(TOKEN_KEY, $("token").value.trim()); } catch (e) { /* private mode */ }
+    loadConfig();
+  });
+
+  $("go").addEventListener("click", generate);
+  $("copyCurl").addEventListener("click", copyCurl);
+  $("prompt").addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); generate(); }
+  });
+
+  updatePromptCount();
+
+  if (location.protocol === "file:") {
+    $("fileWarning").classList.remove("hidden");
+    $("go").disabled = true;
+  } else {
+    loadConfig().then(function () {
+      updatePromptCount();
+      loadHistory();
+    });
+  }
+})();
+</script>
+</body>
+</html>

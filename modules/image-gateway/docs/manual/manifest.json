@@ -1,0 +1,590 @@
+{
+  "generatedAt": "2026-09-24T13:23:43+0800",
+  "gateway": "http://127.0.0.1:4400",
+  "paidCalls": 12,
+  "cases": [
+    {
+      "id": "aspect-4x3",
+      "group": "aspect",
+      "label": "4:3",
+      "variable": "aspect",
+      "body": {
+        "mode": "image",
+        "prompt": "一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风飘动，加州海滨阳光下的街道，动感抓拍瞬间，鲜艳明快的色彩，电影感构图，高细节",
+        "aspect": "4:3"
+      },
+      "note": "同一提示词，只改比例",
+      "status": 200,
+      "reusedFrom": "data/files/49ee3bee349bd48ce927ef0e712908a4.png",
+      "file": "img/aspect-4x3.png",
+      "envelope": {
+        "id": "49ee3bee349bd48ce927ef0e712908a4",
+        "mimeType": "image/png",
+        "size": 1854595,
+        "sha256": "49ee3bee349bd48ce927ef0e712908a43fdc60fa003f98f128d4c342acc29148",
+        "storedAt": "2026-09-24T03:48:02.083Z",
+        "width": null,
+        "height": null,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "sourceField": "image"
+      },
+      "measured": {
+        "bytes": 1854595,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "aspect-1x1",
+      "group": "aspect",
+      "label": "1:1",
+      "variable": "aspect",
+      "body": {
+        "mode": "image",
+        "prompt": "一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风飘动，加州海滨阳光下的街道，动感抓拍瞬间，鲜艳明快的色彩，电影感构图，高细节",
+        "aspect": "1:1"
+      },
+      "note": "同一提示词，只改比例",
+      "status": 200,
+      "elapsedSeconds": 14.82,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "350cd69b6c43fa0c0148a6749bcb2089",
+        "url": "http://127.0.0.1:4400/files/350cd69b6c43fa0c0148a6749bcb2089.png",
+        "path": "/files/350cd69b6c43fa0c0148a6749bcb2089.png",
+        "mimeType": "image/png",
+        "size": 1745583,
+        "sha256": "350cd69b6c43fa0c0148a6749bcb2089cef2177edbc8f4a8d6dd36f4ff12803e",
+        "cached": false,
+        "createdAt": "2026-09-24T05:14:08.292Z",
+        "width": 1024,
+        "height": 1024,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/aspect-1x1.png",
+      "measured": {
+        "bytes": 1745583,
+        "mime": "image/png",
+        "width": 1024,
+        "height": 1024,
+        "ratio": 1.0
+      }
+    },
+    {
+      "id": "aspect-16x9",
+      "group": "aspect",
+      "label": "16:9",
+      "variable": "aspect",
+      "body": {
+        "mode": "image",
+        "prompt": "一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风飘动，加州海滨阳光下的街道，动感抓拍瞬间，鲜艳明快的色彩，电影感构图，高细节",
+        "aspect": "16:9"
+      },
+      "note": "同一提示词，只改比例",
+      "status": 200,
+      "elapsedSeconds": 13.12,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "3c649dabfdd197c82ab669c1d64b4b18",
+        "url": "http://127.0.0.1:4400/files/3c649dabfdd197c82ab669c1d64b4b18.png",
+        "path": "/files/3c649dabfdd197c82ab669c1d64b4b18.png",
+        "mimeType": "image/png",
+        "size": 1753953,
+        "sha256": "3c649dabfdd197c82ab669c1d64b4b1827074890c45fbc48d5957da83da217d7",
+        "cached": false,
+        "createdAt": "2026-09-24T05:14:22.822Z",
+        "width": 1344,
+        "height": 768,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/aspect-16x9.png",
+      "measured": {
+        "bytes": 1753953,
+        "mime": "image/png",
+        "width": 1344,
+        "height": 768,
+        "ratio": 1.75
+      }
+    },
+    {
+      "id": "aspect-3x4",
+      "group": "aspect",
+      "label": "3:4",
+      "variable": "aspect",
+      "body": {
+        "mode": "image",
+        "prompt": "一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风飘动，加州海滨阳光下的街道，动感抓拍瞬间，鲜艳明快的色彩，电影感构图，高细节",
+        "aspect": "3:4"
+      },
+      "note": "同一提示词，只改比例",
+      "status": 200,
+      "elapsedSeconds": 13.21,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "cf1df977c6d591a929ef087c2c6aca67",
+        "url": "http://127.0.0.1:4400/files/cf1df977c6d591a929ef087c2c6aca67.png",
+        "path": "/files/cf1df977c6d591a929ef087c2c6aca67.png",
+        "mimeType": "image/png",
+        "size": 1681541,
+        "sha256": "cf1df977c6d591a929ef087c2c6aca6730286b350aad000a7faef6f3439a8869",
+        "cached": false,
+        "createdAt": "2026-09-24T05:14:37.413Z",
+        "width": 864,
+        "height": 1184,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/aspect-3x4.png",
+      "measured": {
+        "bytes": 1681541,
+        "mime": "image/png",
+        "width": 864,
+        "height": 1184,
+        "ratio": 0.7297
+      }
+    },
+    {
+      "id": "aspect-9x16",
+      "group": "aspect",
+      "label": "9:16",
+      "variable": "aspect",
+      "body": {
+        "mode": "image",
+        "prompt": "一位快乐的美式女孩踩着滑板，灿烂的笑容，金色长发随风飘动，加州海滨阳光下的街道，动感抓拍瞬间，鲜艳明快的色彩，电影感构图，高细节",
+        "aspect": "9:16"
+      },
+      "note": "同一提示词，只改比例",
+      "status": 200,
+      "elapsedSeconds": 12.86,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "e7f5df7d2ea94d7f97b095b21cd4e21e",
+        "url": "http://127.0.0.1:4400/files/e7f5df7d2ea94d7f97b095b21cd4e21e.png",
+        "path": "/files/e7f5df7d2ea94d7f97b095b21cd4e21e.png",
+        "mimeType": "image/png",
+        "size": 1701393,
+        "sha256": "e7f5df7d2ea94d7f97b095b21cd4e21edc439af65b099aa435f7f699d279f39e",
+        "cached": false,
+        "createdAt": "2026-09-24T05:14:51.903Z",
+        "width": 768,
+        "height": 1344,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/aspect-9x16.png",
+      "measured": {
+        "bytes": 1701393,
+        "mime": "image/png",
+        "width": 768,
+        "height": 1344,
+        "ratio": 0.5714
+      }
+    },
+    {
+      "id": "prompt-5",
+      "group": "prompt",
+      "label": "柯基犬",
+      "variable": "prompt",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3"
+      },
+      "note": "同一比例 4:3，只改提示词",
+      "status": 200,
+      "elapsedSeconds": 12.49,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "582f69a6f9a447f1c8b5e47dd7d75c25",
+        "url": "http://127.0.0.1:4400/files/582f69a6f9a447f1c8b5e47dd7d75c25.png",
+        "path": "/files/582f69a6f9a447f1c8b5e47dd7d75c25.png",
+        "mimeType": "image/png",
+        "size": 1520903,
+        "sha256": "582f69a6f9a447f1c8b5e47dd7d75c2557e995f285d6ad89e2c16acca6971ba4",
+        "cached": false,
+        "createdAt": "2026-09-24T05:15:05.994Z",
+        "width": 1184,
+        "height": 864,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/prompt-5.png",
+      "measured": {
+        "bytes": 1520903,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "prompt-6",
+      "group": "prompt",
+      "label": "几何海报",
+      "variable": "prompt",
+      "body": {
+        "mode": "image",
+        "prompt": "现代极简几何海报，三个交叠的圆形，橙色与青色对比，纯色背景",
+        "aspect": "4:3"
+      },
+      "note": "同一比例 4:3，只改提示词",
+      "status": 200,
+      "elapsedSeconds": 21.87,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "7092c6fb2360bd8c1b4e7214fc73bc5c",
+        "url": "http://127.0.0.1:4400/files/7092c6fb2360bd8c1b4e7214fc73bc5c.png",
+        "path": "/files/7092c6fb2360bd8c1b4e7214fc73bc5c.png",
+        "mimeType": "image/png",
+        "size": 839081,
+        "sha256": "7092c6fb2360bd8c1b4e7214fc73bc5ca832ea3ef2eeabfc57f7cab313bdd7a8",
+        "cached": false,
+        "createdAt": "2026-09-24T05:15:29.493Z",
+        "width": 1184,
+        "height": 864,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/prompt-6.png",
+      "measured": {
+        "bytes": 839081,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "probe-model",
+      "group": "probe",
+      "label": "model",
+      "variable": "model",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "model": {}
+      },
+      "note": "类型故意给错；若被绑定应回 problem+json",
+      "status": 200,
+      "elapsedSeconds": 11.89,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "bfb9ae14ab3d737f6077675984498f8c",
+        "url": "http://127.0.0.1:4400/files/bfb9ae14ab3d737f6077675984498f8c.png",
+        "path": "/files/bfb9ae14ab3d737f6077675984498f8c.png",
+        "mimeType": "image/png",
+        "size": 1453382,
+        "sha256": "bfb9ae14ab3d737f6077675984498f8c2e3a912a27d5194c552c0ac0c503ece0",
+        "cached": false,
+        "createdAt": "2026-09-24T05:15:42.968Z",
+        "width": 1184,
+        "height": 864,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/probe-model.png",
+      "measured": {
+        "bytes": 1453382,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "probe-seed",
+      "group": "probe",
+      "label": "seed",
+      "variable": "seed",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "seed": {}
+      },
+      "note": "类型故意给错；若被绑定应回 problem+json",
+      "status": 200,
+      "elapsedSeconds": 10.87,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "f661f561359983b2f26093e57a3ab48e",
+        "url": "http://127.0.0.1:4400/files/f661f561359983b2f26093e57a3ab48e.png",
+        "path": "/files/f661f561359983b2f26093e57a3ab48e.png",
+        "mimeType": "image/png",
+        "size": 1529272,
+        "sha256": "f661f561359983b2f26093e57a3ab48e6c548e3da2064843154050d60fc6664f",
+        "cached": false,
+        "createdAt": "2026-09-24T05:15:55.856Z",
+        "width": 1184,
+        "height": 864,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/probe-seed.png",
+      "measured": {
+        "bytes": 1529272,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "probe-style",
+      "group": "probe",
+      "label": "style",
+      "variable": "style",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "style": {}
+      },
+      "note": "类型故意给错；若被绑定应回 problem+json",
+      "status": 200,
+      "elapsedSeconds": 10.08,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "c6312547cf40e829454c02398efd0e0c",
+        "url": "http://127.0.0.1:4400/files/c6312547cf40e829454c02398efd0e0c.png",
+        "path": "/files/c6312547cf40e829454c02398efd0e0c.png",
+        "mimeType": "image/png",
+        "size": 1505065,
+        "sha256": "c6312547cf40e829454c02398efd0e0cca3d0bf3dfc305d8b6851f9fa4341b66",
+        "cached": false,
+        "createdAt": "2026-09-24T05:16:07.512Z",
+        "width": 1184,
+        "height": 864,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/probe-style.png",
+      "measured": {
+        "bytes": 1505065,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "probe-negativePrompt",
+      "group": "probe",
+      "label": "negativePrompt",
+      "variable": "negativePrompt",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "negativePrompt": {}
+      },
+      "note": "类型故意给错；若被绑定应回 problem+json",
+      "status": 200,
+      "elapsedSeconds": 11.28,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "9f2d24fd5b4888a066ab683e7b1aab6c",
+        "url": "http://127.0.0.1:4400/files/9f2d24fd5b4888a066ab683e7b1aab6c.png",
+        "path": "/files/9f2d24fd5b4888a066ab683e7b1aab6c.png",
+        "mimeType": "image/png",
+        "size": 1511102,
+        "sha256": "9f2d24fd5b4888a066ab683e7b1aab6c1cba60e7f321599b2752ee38648b558a",
+        "cached": false,
+        "createdAt": "2026-09-24T05:16:20.394Z",
+        "width": 1184,
+        "height": 864,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/probe-negativePrompt.png",
+      "measured": {
+        "bytes": 1511102,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "probe-image",
+      "group": "probe",
+      "label": "image",
+      "variable": "image",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "image": {}
+      },
+      "note": "类型故意给错；若被绑定应回 problem+json",
+      "status": 400,
+      "elapsedSeconds": 2.52,
+      "contentType": "application/json",
+      "response": {
+        "error": "upstream_error"
+      },
+      "bound": false
+    },
+    {
+      "id": "probe-width",
+      "group": "probe",
+      "label": "width",
+      "variable": "width",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "width": {}
+      },
+      "note": "类型故意给错；若被绑定应回 problem+json",
+      "status": 200,
+      "elapsedSeconds": 11.08,
+      "contentType": "application/json",
+      "envelope": {
+        "id": "42d2afcdd2d7bd8f1b9a15c937624a6a",
+        "url": "http://127.0.0.1:4400/files/42d2afcdd2d7bd8f1b9a15c937624a6a.png",
+        "path": "/files/42d2afcdd2d7bd8f1b9a15c937624a6a.png",
+        "mimeType": "image/png",
+        "size": 1458722,
+        "sha256": "42d2afcdd2d7bd8f1b9a15c937624a6aeff7da59ec11e0ed518c5944d014236c",
+        "cached": false,
+        "createdAt": "2026-09-24T05:16:37.321Z",
+        "width": 1184,
+        "height": 864,
+        "c2pa": true
+      },
+      "upstream": {
+        "host": "upstream.example.com",
+        "path": "/api/v1/media/ai/image",
+        "status": 200,
+        "id": null,
+        "sourceField": "image"
+      },
+      "file": "img/probe-width.png",
+      "measured": {
+        "bytes": 1458722,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      }
+    },
+    {
+      "id": "image-ref",
+      "group": "image",
+      "label": "带参考图",
+      "variable": "image",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "image": "data:image/png;base64,<128x128 参考图，见 manifest 说明>"
+      },
+      "note": "image 传 base64 data URL：被接受，正常出图",
+      "status": 200,
+      "file": "img/image-ref.png",
+      "envelope": {
+        "id": "55b01fb395841f2931073fbe453c34a9",
+        "mimeType": "image/png",
+        "size": 1466843,
+        "sha256": "55b01fb395841f2931073fbe453c34a94949960c8bccf20deb3f81719d1cb946"
+      },
+      "measured": {
+        "bytes": 1466843,
+        "mime": "image/png",
+        "width": 1184,
+        "height": 864,
+        "ratio": 1.3704
+      },
+      "observedByHand": true
+    },
+    {
+      "id": "image-url",
+      "group": "image",
+      "label": "参考图给 http URL",
+      "variable": "image",
+      "body": {
+        "mode": "image",
+        "prompt": "一只戴着红色围巾的柯基犬坐在雪地里，柔和的冬日光线，高细节",
+        "aspect": "4:3",
+        "image": "https://example.com/nope.png"
+      },
+      "note": "上游不会替你下载链接：502",
+      "status": 502,
+      "response": {
+        "error": "upstream"
+      },
+      "observedByHand": true
+    }
+  ]
+}

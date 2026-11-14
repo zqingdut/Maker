@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchDaemon: starts at boot, before anyone logs in.
+
+  Installed to /Library/LaunchDaemons/@@LABEL@@.plist by
+  `install-service.sh --daemon` (needs sudo). Identical to the agent except for
+  UserName below.
+
+  Use this only if the service must be up with nobody logged in -- a headless
+  box, or something that talks to it over the network at boot. For "it should
+  just be running when I sit down at my Mac", the agent is the right tool and
+  needs no root at all.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>@@LABEL@@</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>@@PROJECT_DIR@@/deploy/image-gateway-service.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>@@PROJECT_DIR@@</string>
+
+    <!-- launchd runs daemons as root, which would leave every file the service
+         writes -- data/files, the logs, the env file's siblings -- owned by
+         root and un-editable by you afterwards. UserName makes launchd drop to
+         this user before exec, so the daemon starts at boot *and* still runs as
+         you. This is the reason to prefer it over just chowning things.
+         The user must be able to read @@PROJECT_DIR@@ and write @@LOG_DIR@@. -->
+    <key>UserName</key>
+    <string>@@USER@@</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>ExitTimeOut</key>
+    <integer>20</integer>
+
+    <key>StandardOutPath</key>
+    <string>@@LOG_DIR@@/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>@@LOG_DIR@@/launchd.err.log</string>
+</dict>
+</plist>

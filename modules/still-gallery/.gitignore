@@ -1,0 +1,118 @@
+# ─────────────────────────────────────────────────────────────────────
+# Still Gallery — 只提交源码与种子数据。
+# 运行时状态、凭据、日志、依赖、构建产物、系统垃圾一律不提交。
+# ─────────────────────────────────────────────────────────────────────
+
+# ── 1. 运行时数据（本地状态，绝不提交）───────────────────────────────
+# 服务运行时写入：图片与提示词的关联记录、管理密码哈希、下载下来的图片。
+# 一旦被 git 跟踪，任何 git restore / git checkout -- . / git clean
+# 都会静默回滚或删除真实数据，且症状看起来像应用自身的 bug。
+data/images.json
+data/images.json.bak
+data/auth.json
+data/settings.json
+data/metrics.json
+data/uploads/
+data/exports/
+data/imports/
+data/.cache/
+# 24 小时生成记录：索引里有完整提示词，目录里是图片字节，都只属于本地
+data/generations.json
+data/generations/
+# 后台图库（私有）：长期保存的图片与索引，绝不进版本库
+data/vault.json
+data/vault/
+# 后台剪贴板：可能是任何东西，包括密码和令牌，同样只属于本地
+data/clipboard.json
+data/clipboard/
+
+# 数据目录下的其它本地文件兜底
+data/*.bak
+data/*.tmp
+data/*.local.json
+
+# ── 2. 凭据与密钥 ────────────────────────────────────────────────────
+# 环境变量文件（保留 .env.example 作为模板）
+.env
+.env.*
+!.env.example
+
+# 证书与私钥
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.keystore
+*.jks
+*.crt
+*.cer
+*.der
+*.ppk
+
+# SSH 私钥
+id_rsa*
+id_ed25519*
+id_ecdsa*
+
+# 各类工具的凭据文件
+.npmrc
+.yarnrc
+.pypirc
+.netrc
+.aws/
+.docker/config.json
+credentials.json
+service-account*.json
+secrets.json
+*secret*.json
+*.token
+*.keychain
+
+# ── 3. 日志 ──────────────────────────────────────────────────────────
+# 运行日志可能含有提示词、图片地址（含签名凭据）等隐私内容
+*.log
+logs/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── 4. 依赖与构建产物 ────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+out/
+coverage/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# ── 5. 导出/导入的本地文件 ───────────────────────────────────────────
+exports/
+imports/
+*.export.json
+still-gallery-export-*.json
+
+# ── 6. 临时文件 ──────────────────────────────────────────────────────
+tmp/
+temp/
+*.tmp
+*.temp
+*.orig
+*.rej
+
+# ── 7. 编辑器与操作系统 ──────────────────────────────────────────────
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── 8. 种子数据（首次启动用，属于源码，保留跟踪）────────────────────
+!data/demo.json

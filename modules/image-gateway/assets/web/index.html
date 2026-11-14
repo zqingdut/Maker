@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>image-gateway</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --line: #e3e6eb; --accent: #3b5bdb; --accent-soft: #eef1fd;
+    --ok: #157347; --warn: #9a6700;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2.5rem 1.5rem 4rem; background: var(--bg); color: var(--ink);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
+  h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 2rem 0 .6rem; }
+  p.lede { color: var(--muted); margin: 0 0 1.5rem; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.25rem; }
+  .row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+  .row > * { flex: 1 1 180px; }
+  label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: .3rem; }
+  textarea, select, input {
+    width: 100%; font: inherit; color: inherit; background: #fff;
+    border: 1px solid var(--line); border-radius: 8px; padding: .5rem .6rem;
+  }
+  textarea { min-height: 92px; resize: vertical; font-size: .9rem; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; color: #fff; background: var(--accent);
+    border: 0; border-radius: 8px; padding: .58rem 1.1rem; flex: 0 0 auto;
+  }
+  button:disabled { opacity: .55; cursor: progress; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+  code, .mono { font-family: var(--mono); font-size: .85em; }
+  .verb { display: inline-block; min-width: 3.2rem; font-weight: 700; font-family: var(--mono); font-size: .76rem; }
+  .GET { color: var(--ok); } .POST { color: var(--accent); }
+  pre {
+    background: #f2f4f7; border: 1px solid var(--line); border-radius: 8px; padding: .8rem;
+    overflow: auto; max-height: 320px; font-family: var(--mono); font-size: .8rem; margin: 0;
+  }
+  .status { font-size: .82rem; color: var(--muted); margin: .7rem 0; }
+  .status b { font-family: var(--mono); }
+  .bad { color: #b42318; } .good { color: var(--ok); }
+  img.preview { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; margin-top: .8rem; }
+  .tag { display: inline-block; font-size: .7rem; padding: .1rem .45rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  .tag.warn { background: #fff6e5; color: var(--warn); }
+  .count { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-top: .3rem; }
+  .count.over { color: #b42318; font-weight: 600; }
+  .fail {
+    background: #fdf2f1; border: 1px solid #f3c9c4; border-radius: 8px;
+    padding: .7rem .85rem; margin: .7rem 0; font-size: .86rem;
+  }
+  .fail p { margin: 0 0 .35rem; }
+  .fail p:last-child { margin-bottom: 0; }
+  .fail .muted { color: var(--muted); }
+  .hidden { display: none; }
+  footer { margin-top: 2.5rem; color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>image-gateway</h1>
+  <p class="lede">
+    A local stand-in for a third-party media API, reconstructed from a captured
+    browser session. This page is the SPA fallback — the real service also answers unmatched
+    <code>GET</code>s with <code>index.html</code> instead of a 404.
+  </p>
+
+  <h2>Try the captured call</h2>
+  <div class="card">
+    <div class="row">
+      <div style="flex:2 1 340px">
+        <label for="prompt">prompt <span id="promptSource" class="tag">loading capture…</span></label>
+        <textarea id="prompt">现代铅笔插画，意大利阿马尔菲海岸复古旅行海报插画，全景海岸悬崖公路场景，经典1960年代敞篷汽车沿着弯曲的海滨公路行驶，带有小帆船的深蓝色地中海，色彩缤纷的粉彩山腰村庄，温暖的夏日阳光，复古1950年代旅行海报风格。</textarea>
+        <div class="count" id="promptCount" aria-live="polite"></div>
+      </div>
+      <div>
+        <label for="aspect">aspect</label>
+        <select id="aspect">
+          <option>4:3</option><option>1:1</option><option>16:9</option>
+          <option>9:16</option><option>3:4</option><option>3:2</option>
+        </select>
+      </div>
+      <div>
+        <label for="variant">variant</label>
+        <select id="variant"><option>captured</option><option>placeholder</option></select>
+      </div>
+      <div>
+        <label for="style">response style</label>
+        <select id="style"><option>inline</option><option>url</option><option>openai</option></select>
+      </div>
+      <button id="go">POST</button>
+    </div>
+    <div class="status" id="status">idle</div>
+    <div id="fail" class="fail hidden"></div>
+    <pre id="out">// response appears here</pre>
+    <div id="preview"></div>
+  </div>
+
+  <h2>Endpoints</h2>
+  <div class="card">
+    <table>
+      <tr><th>Method</th><th>Path</th><th>Notes</th></tr>
+      <tr><td><span class="verb POST">POST</span></td><td class="mono">/api/v1/media/ai/image</td>
+          <td>the captured endpoint. body <code>{"mode","prompt","aspect"}</code></td></tr>
+      <tr><td><span class="verb POST">POST</span></td><td class="mono">/api/v1/media/upload</td>
+          <td>mock extension — data-URL upload <span class="tag warn">inferred</span></td></tr>
+      <tr><td><span class="verb GET">GET</span></td><td class="mono">/assets/generated/&lt;id&gt;.png</td>
+          <td>bytes for <code>url</code>-style responses</td></tr>
+      <tr><td><span class="verb GET">GET</span></td><td class="mono">/assets/&lt;path&gt;</td>
+          <td>the captured font was never recorded — see <code>IMAGE_GATEWAY_ASSET_MISS</code></td></tr>
+      <tr><td><span class="verb GET">GET</span></td><td class="mono">/__mock__/state</td>
+          <td>settings, counters, capture summary <span class="tag">mock only</span></td></tr>
+      <tr><td><span class="verb GET">GET</span></td><td class="mono">/__mock__/docs</td>
+          <td>OpenAPI UI <span class="tag">mock only</span></td></tr>
+      <tr><td><span class="verb GET">GET</span></td><td class="mono">/__mock__/requests</td>
+          <td>recent requests as logged <span class="tag">mock only</span></td></tr>
+    </table>
+  </div>
+
+  <footer>
+    Success payloads are a reconstruction — only the requests were captured. Error envelope
+    <code>{"error":"&lt;code&gt;"}</code>, the 405-on-unknown-POST and the SPA fallback were
+    observed live.
+  </footer>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
+// Why a generation failed, in words rather than in a code.
+//
+// The gateway's error body is deliberately just {"error":"<code>"} -- it
+// reconstructs the origin's envelope and must not grow keys the origin never
+// sent. So the explanation lives here, on the page, where it can be written for
+// a person: what happened, and what to change.
+const FAILURES = {
+  bad_body: ['The request body is not a JSON object.', 'Send {"mode","prompt","aspect"} as application/json.'],
+  bad_request: ['A field had the wrong type.', 'mode, prompt and aspect must all be strings.'],
+  bad_mode: ['mode was rejected.', 'Only "image" is supported.'],
+  empty_prompt: ['The prompt is empty.', 'Whitespace does not count as content.'],
+  prompt_too_long: ['The prompt is over the budget.', 'Shorten it, or raise IMAGE_GATEWAY_MAX_PROMPT_CHARS. The default truncates rather than failing.'],
+  missing_token: ['The gateway wants a token.', 'Set IMAGE_GATEWAY_ACCESS_TOKEN, or clear it to run open.'],
+  invalid_token: ['The token did not match.', 'Check it against IMAGE_GATEWAY_ACCESS_TOKEN.'],
+  unauthorized: ['Not authorised (401).', 'Check the token or the device credential.'],
+  forbidden: ['Forbidden (403).', 'The credential is valid but lacks permission; check the origin account.'],
+  rate_limited: ['Too many requests; the rate limiter refused this one.', 'Wait -- the Retry-After seconds are shown above. Or raise IMAGE_GATEWAY_RATE_LIMIT_PER_MINUTE.'],
+  missing_device: ['No device id was sent.', 'This endpoint authenticates a device; the gateway normally supplies it.'],
+  bad_device: ['The device id does not match the expected shape.', 'See IMAGE_GATEWAY_DEVICE_PATTERN.'],
+  gateway_disabled: ['Gateway mode is off.', 'Set IMAGE_GATEWAY_GATEWAY_ENABLED=true.'],
+  no_upstream: ['No origin is configured.', 'Set IMAGE_GATEWAY_UPSTREAM to the real origin.'],
+  upstream_error: ['The origin refused, or could not be reached.', 'Check the origin host, and that its device credential is still valid.'],
+  upstream_bad_image_url: ['The origin returned an image URL outside the allowed host.', 'The gateway only fetches images from the configured origin.'],
+  upstream_unavailable: ['The origin is temporarily unavailable.', 'Usually maintenance or overload; retry shortly.'],
+  upstream_timeout: ['The origin did not answer in time.', 'Raise IMAGE_GATEWAY_RELAY_TIMEOUT_S, or just retry -- the origin may have been slow.'],
+  upstream_no_image: ['The origin answered, but with no usable image.', 'Its response shape may have changed; see the raw body below.'],
+  upstream_bad_image: ['The origin returned bytes that are not a decodable image.', 'Usually an error page saved as if it were the image; see the raw body.'],
+  upstream_busy: ['Too many generations in flight.', 'Raise IMAGE_GATEWAY_MAX_CONCURRENT_UPSTREAM, or wait a moment.'],
+  payload_too_large: ['The request body is over the size limit.', 'See IMAGE_GATEWAY_MAX_BODY_BYTES.'],
+  bad_payload: ['The reference image is not a usable data URL.', 'Expected "data:image/...;base64,...".'],
+  bad_style: ['The X-Mock-Style value is unknown.', 'Use inline, url or openai.'],
+  bad_variant: ['The X-Mock-Variant value is unknown.', 'Use captured or placeholder.'],
+  bad_fail_directive: ['X-Mock-Fail is not a status code.', 'Use a number, or "off".'],
+  bad_delay_directive: ['X-Mock-Delay is not an integer.', 'Milliseconds, e.g. 200.'],
+  not_found: ['Nothing is stored under that id.', 'Generate an image first.'],
+  unknown_generation: ['That asset was never generated.', 'The id does not match anything on disk.'],
+  asset_not_captured: ['That asset was not in the capture.', 'See IMAGE_GATEWAY_ASSET_MISS.'],
+  internal_error: ['The gateway hit an unexpected error.', 'Its log has the traceback.'],
+  no_image_url: ['The gateway said success, but the response carried no image URL.', 'The origin may have changed its response shape; see the raw body.'],
+  image_unreachable: ['The image URL did not load.', 'The file may have been moved out of data/, or the asset route returned 404.'],
+  network_error: ['The gateway could not be reached at all.', 'Is the server running? A proxy may be intercepting localhost.'],
+  client_timeout: ['The page gave up after 120 seconds.', 'The origin may still be working; check /__mock__/requests.'],
+};
+
+function explainFailure(code, status) {
+  if (code && FAILURES[code]) return FAILURES[code];
+  if (status >= 500) return ['The gateway or the origin failed.', 'Check the raw body below and the server log.'];
+  if (status >= 400) return ['The request was rejected.', 'The raw body below carries the error code.'];
+  return ['The request did not succeed.', 'See the raw body below.'];
+}
+
+// Character budget for the prompt. The service truncates past this rather than
+// rejecting, so the count is the only warning the writer gets -- show it while
+// they type, not after the image comes back wrong.
+let promptLimit = 4000;
+
+function updatePromptCount() {
+  const len = $('prompt').value.length;
+  const over = promptLimit > 0 && len > promptLimit;
+  const box = $('promptCount');
+  // promptLimit === 0 is "no limit", not "a limit of zero" -- rendering "len / 0"
+  // would read as an error state the gateway does not actually have.
+  box.textContent = promptLimit > 0
+    ? len + ' / ' + promptLimit + ' characters' +
+      (over ? ' — over by ' + (len - promptLimit) + ', will be truncated' : '')
+    : len + ' characters — no limit';
+  box.classList.toggle('over', over);
+}
+
+async function loadPromptLimit() {
+  try {
+    const res = await fetch('/v1/config');
+    if (!res.ok) return;
+    const cfg = await res.json();
+    const limit = cfg && cfg.limits && cfg.limits.maxPromptChars;
+    if (typeof limit === 'number') promptLimit = limit;
+  } catch (err) {
+    // Offline or gateway disabled: the default matches Settings.max_prompt_chars.
+  }
+  updatePromptCount();
+}
+
+// Load the captured request verbatim from /__mock__/capture rather than
+// hard-coding it here, so the demo can never drift from re.txt.
+async function loadCapture() {
+  try {
+    const res = await fetch('/__mock__/capture');
+    if (!res.ok) throw new Error('capture unavailable');
+    const spec = await res.json();
+    const call = spec.captures.find((c) => c.id === 'ai-image');
+    if (!call || !call.body) throw new Error('no ai-image capture');
+    if (call.body.prompt) $('prompt').value = call.body.prompt;
+    if (call.body.aspect) $('aspect').value = call.body.aspect;
+    $('promptSource').textContent = 'verbatim from re.txt';
+  } catch (err) {
+    $('promptSource').textContent = 'capture unavailable — using an abridged prompt';
+    $('promptSource').className = 'tag warn';
+  }
+  updatePromptCount();
+}
+
+// Renders a failed generation: what went wrong, why, and what to change.
+//
+// `res` is null when the request never completed, in which case there is no HTTP
+// status to report and saying "HTTP 0" would be a lie. `code` is passed in
+// explicitly for that case, because there is no body to read one out of.
+function showFailure(res, json, text, ms, code) {
+  const status = res ? res.status : null;
+  code = code || (json && json.error ? json.error : null);
+  const [why, fix] = explainFailure(code, status);
+  // The origin's own status, when the failure came from it rather than from us.
+  // The gateway's status alone hides the difference between "our bug" and
+  // "the origin said 500".
+  const relayed = res ? res.headers.get('x-relay-upstream-status') : null;
+  const note = res ? res.headers.get('x-mock-error-note') : null;
+  // A 429 says "wait" -- the number is the only actionable part of that.
+  const retryAfter = res ? res.headers.get('retry-after') : null;
+
+  const box = $('fail');
+  box.classList.remove('hidden');
+  box.innerHTML =
+    '<p><b>' + (status ? 'Generation failed · HTTP ' + esc(status) : 'Generation failed · the request never completed') + '</b>' +
+    (relayed ? ' <span class="muted">· origin HTTP ' + esc(relayed) + '</span>' : '') + '</p>' +
+    (code ? '<p>Code <code>' + esc(code) + '</code></p>' : '') +
+    '<p>' + esc(why) + '</p>' +
+    (fix ? '<p class="muted">' + esc(fix) + '</p>' : '') +
+    (retryAfter ? '<p class="muted">Retry after ' + esc(retryAfter) + 's.</p>' : '') +
+    (note ? '<p class="muted">Gateway note: <code>' + esc(note) + '</code></p>' : '');
+
+  $('status').innerHTML = status
+    ? 'HTTP <b class="bad">' + status + '</b> · ' + ms + ' ms'
+    : '<b class="bad">no response</b> · ' + ms + ' ms';
+  $('out').textContent = json ? JSON.stringify(json, null, 2) : (text || '(empty body)');
+}
+
+async function fire() {
+  const body = { mode: 'image', prompt: $('prompt').value, aspect: $('aspect').value };
+  $('go').disabled = true;
+  $('status').textContent = 'requesting…';
+  $('preview').innerHTML = '';
+  $('fail').classList.add('hidden');
+  const started = performance.now();
+  try {
+    const res = await fetch('/api/v1/media/ai/image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Mock-Style': $('style').value,
+        'X-Mock-Variant': $('variant').value,
+        'X-Mock-Delay': '200',
+      },
+      body: JSON.stringify(body),
+    });
+    const ms = Math.round(performance.now() - started);
+
+    // Read the body as text first. A failure is not guaranteed to be JSON -- a
+    // proxy's 502 page, or an empty body, would make `res.json()` throw, and the
+    // catch below would then report a parse error instead of the real cause.
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch (err) { json = null; }
+
+    if (!res.ok) {
+      showFailure(res, json, text, ms);
+      return;
+    }
+
+    const shown = JSON.parse(JSON.stringify(json));
+    const src = json.image || json.url || (json.data && json.data[0] && 'data:image/png;base64,' + json.data[0].b64_json);
+    if (shown.image) shown.image = shown.image.slice(0, 64) + '… (' + json.image.length + ' chars)';
+    if (shown.data && shown.data[0] && shown.data[0].b64_json) {
+      shown.data[0].b64_json = shown.data[0].b64_json.slice(0, 64) + '… (' + json.data[0].b64_json.length + ' chars)';
+    }
+    $('out').textContent = JSON.stringify(shown, null, 2);
+    $('status').innerHTML = 'HTTP <b class="good">' + res.status + '</b> · ' + ms + ' ms';
+    if (src) {
+      const img = document.createElement('img');
+      img.className = 'preview';
+      img.src = src;
+      // A 200 whose bytes never arrive is still a failure to the person waiting:
+      // the file may have been moved out of data/, or the asset route may 404.
+      // Without this the page just shows a broken-image icon and says nothing.
+      img.onerror = () => {
+        const [why, fix] = explainFailure('image_unreachable', 502);
+        const box = $('fail');
+        box.classList.remove('hidden');
+        box.innerHTML =
+          '<p><b>Generation failed · the image did not load</b></p>' +
+          '<p>' + esc(why) + '</p>' +
+          '<p class="muted">' + esc(fix) + '</p>' +
+          '<p class="muted">URL: <code>' + esc(String(src).slice(0, 200)) + '</code></p>';
+      };
+      $('preview').appendChild(img);
+    }
+  } catch (err) {
+    // No HTTP exchange happened at all, so there is no status to show -- and no
+    // body to read an error code out of either.
+    showFailure(null, null, String(err && err.message ? err.message : err),
+      Math.round(performance.now() - started), 'network_error');
+  } finally {
+    $('go').disabled = false;
+  }
+}
+
+$('go').addEventListener('click', fire);
+$('prompt').addEventListener('input', updatePromptCount);
+updatePromptCount();
+loadPromptLimit();
+loadCapture();
+</script>
+</body>
+</html>
