@@ -6,13 +6,24 @@
 <meta name="color-scheme" content="light">
 <title>MAKER® — 张清 · 职业形象转盘</title>
 <meta name="description" content="张清：11 年软件开发，6 个职业阶段。拖动转盘，点击人物查看每个阶段的档案收据。">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body class="mode-ring">
 <div class="screen" id="screen">
+  <!-- 舞台地面虚线刻度环（随转盘角度旋转） -->
+  <div class="stage-ring-guide" id="ringGuide" aria-hidden="true">
+    <svg viewBox="0 0 600 180" fill="none">
+      <ellipse cx="300" cy="90" rx="284" ry="74" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 6"/>
+      <ellipse cx="300" cy="90" rx="210" ry="52" stroke="currentColor" stroke-width="0.9" stroke-dasharray="1 5" opacity="0.55"/>
+      <line x1="286" y1="90" x2="314" y2="90" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+      <line x1="300" y1="80" x2="300" y2="100" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+      <g id="ringTicks"></g>
+    </svg>
+  </div>
+
   <div id="stage" aria-label="职业形象转盘，拖动旋转，点击正面人物查看档案"></div>
 
-  <!-- 顶栏：实时时钟 + 信号 / LOGO / 档案计数（对齐 NOWHERE 顶栏） -->
+  <!-- 顶栏：实时时钟 + 信号 / LOGO / 档案总账单 -->
   <header class="topbar">
     <div class="tb-left">
       <span id="clock">--:--</span>
@@ -24,7 +35,7 @@
       <div class="batt-wrap" aria-hidden="true">
         <span class="batt"><i></i></span><span>11&nbsp;YRS</span>
       </div>
-      <button class="bag-btn" id="archiveBtn" type="button">ARCHIVE&nbsp;(0)</button>
+      <button class="bag-btn" id="archiveBtn" type="button" aria-label="打开生涯总账单">ARCHIVE&nbsp;(0/6)</button>
     </div>
   </header>
 
@@ -39,11 +50,16 @@
 
   <!-- 详情态 UI -->
   <div class="detail-title" id="detailTitle"><span class="dnum">01.</span><span class="dname">CAMPUS</span></div>
-  <div class="hint" id="hint">点人物身上的圆点，查看这个阶段的关键词</div>
+  <div class="hint" id="hint">点人物圆点或右侧条目，联动查看阶段关键词 · 左右键切换阶段</div>
   <button class="close-btn" id="closeBtn" type="button" aria-label="关闭档案">✕</button>
   <div class="receipt-wrap" id="receiptWrap" aria-hidden="true">
     <div class="receipt-ghost" aria-hidden="true"></div>
     <aside class="receipt" id="receipt" aria-label="阶段档案收据"></aside>
+  </div>
+
+  <!-- 生涯总账单弹窗（Master Receipt） -->
+  <div class="master-backdrop" id="masterBackdrop" aria-hidden="true">
+    <aside class="master-receipt" id="masterReceipt" aria-label="生涯总账单"></aside>
   </div>
 
   <!-- 底部信息条 -->
@@ -72,6 +88,6 @@
   公众号 OoneAI
 </footer>
 
-<script src="main.js?v=4"></script>
+<script src="main.js?v=5"></script>
 </body>
 </html>
