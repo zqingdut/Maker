@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light">
 <title>MAKER® — 张清 · 职业形象转盘</title>
 <meta name="description" content="张清：11 年软件开发，6 个职业阶段。拖动转盘，点击人物查看每个阶段的档案收据。">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body class="mode-ring">
 <div class="screen" id="screen">
@@ -50,9 +50,15 @@
 
   <!-- 详情态 UI -->
   <div class="detail-title" id="detailTitle"><span class="dnum">01.</span><span class="dname">CAMPUS</span></div>
-  <div class="hint" id="hint">点人物圆点或右侧条目，联动查看阶段关键词 · 左右键切换阶段</div>
+  <div class="hint" id="hint">点人物圆点或右侧条目，联动查看阶段关键词 · PREV / NEXT 切换阶段</div>
   <button class="close-btn" id="closeBtn" type="button" aria-label="关闭档案">✕</button>
   <div class="receipt-wrap" id="receiptWrap" aria-hidden="true">
+    <div class="receipt-handle" id="receiptHandle" aria-hidden="true"></div>
+    <div class="detail-nav">
+      <button id="prevBtn" type="button" aria-label="上一个阶段">‹ PREV</button>
+      <span id="detailNavLabel">01 / 06</span>
+      <button id="nextBtn" type="button" aria-label="下一个阶段">NEXT ›</button>
+    </div>
     <div class="receipt-ghost" aria-hidden="true"></div>
     <aside class="receipt" id="receipt" aria-label="阶段档案收据"></aside>
   </div>
@@ -88,6 +94,6 @@
   公众号 OoneAI
 </footer>
 
-<script src="main.js?v=5"></script>
+<script src="main.js?v=6"></script>
 </body>
 </html>

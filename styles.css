@@ -337,3 +337,123 @@ body.mode-detail .receipt-wrap { transform: translateX(0) rotate(0deg); opacity:
 @media (prefers-reduced-motion: reduce) {
   .dot { animation: none; }
 }
+
+/* ============ GMaker 升级：主题色 / 刻度环 / 打印小票 / 总账单 ============ */
+:root {
+  --stage-accent: #33565d;
+  --stage-dark: #22393f;
+}
+
+/* 全屏极淡噪点，消除纯色块的数字生硬感 */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 850; pointer-events: none; opacity: .05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* 舞台中心氛围光晕：当前阶段主题色，6%~8% 透明度 */
+.screen::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(46% 32% at 50% 60%, var(--stage-accent), transparent 70%);
+  opacity: .10;
+}
+
+/* 舞台地面刻度环：与转盘同心，随 theta 旋转的只有刻度组 */
+.stage-ring-guide {
+  position: absolute; left: 50%; top: 48%; width: min(73vw, 900px); aspect-ratio: 600 / 180;
+  transform: translate(-50%, -50%); color: rgba(17, 17, 17, .17); z-index: 5;
+  pointer-events: none; transition: opacity .4s;
+}
+.stage-ring-guide svg { width: 100%; height: 100%; display: block; overflow: visible; }
+body:not(.mode-ring) .stage-ring-guide { opacity: 0; }
+
+/* 语义光标：VIEW 实心黑底白字 */
+#cursor.view { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* 激活态圆点：主题色外圈 */
+.dot.active { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 0 0 0 3px var(--stage-accent); }
+
+/* 底部 + 号悬停：当前阶段主题色 */
+.plus-btn:hover { background: var(--stage-accent); transform: rotate(90deg); }
+
+/* 小票逐行打印：35ms 递增延迟；条目可点、可悬停联动圆点 */
+.r-item {
+  animation: print-in .32s cubic-bezier(.2, 1, .3, 1) both;
+  animation-delay: var(--rd, 0s);
+  cursor: pointer; margin: 0 -6px; padding: 8px 6px 2px; border-radius: 6px;
+}
+@keyframes print-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+.r-item:hover { background: rgba(17, 17, 17, .05); }
+.r-item.active { background: rgba(17, 17, 17, .06); box-shadow: inset 3px 0 0 var(--ink); }
+
+/* 小票印章：微倾、主题色边框 */
+.r-stamp {
+  position: absolute; top: 10px; right: 12px; transform: rotate(6deg);
+  border: 1.5px solid var(--stage-accent); color: var(--stage-accent); border-radius: 4px;
+  font-size: 8.5px; letter-spacing: .14em; padding: 3px 6px; opacity: .85; pointer-events: none;
+}
+
+/* 详情内联切页导航 */
+.detail-nav { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; }
+.detail-nav button {
+  background: transparent; border: var(--dash); border-radius: 999px;
+  padding: 7px 14px; font-size: 11px; letter-spacing: .12em; cursor: pointer; color: var(--ink);
+}
+.detail-nav button:hover { background: var(--ink); color: #fff; }
+.detail-nav span { font-size: 11px; letter-spacing: .18em; color: var(--gray); }
+
+/* 小票顶部把手（移动端点按或下拉关闭详情） */
+.receipt-handle { width: 100%; height: 20px; display: none; align-items: center; justify-content: center; cursor: grab; touch-action: none; }
+.receipt-handle::after { content: ""; width: 44px; height: 4px; border-radius: 99px; background: rgba(17, 17, 17, .30); }
+
+/* ============ 生涯总账单（Master Receipt） ============ */
+.master-backdrop {
+  position: fixed; inset: 0; z-index: 800; background: rgba(17, 17, 17, .32);
+  display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.master-backdrop.open { opacity: 1; pointer-events: auto; }
+.master-receipt {
+  width: min(560px, 92vw); max-height: 86dvh; overflow-y: auto; background: #fff;
+  padding: 30px 28px 24px; box-shadow: 0 24px 60px rgba(0, 0, 0, .25);
+  transform: translateY(10px) rotate(-.4deg); transition: transform .3s;
+}
+.master-backdrop.open .master-receipt { transform: translateY(0) rotate(-.4deg); }
+.m-head { text-align: center; }
+.m-row {
+  display: flex; align-items: baseline; gap: 12px; padding: 12px 8px;
+  border-top: 1px dotted #9a9a96; cursor: pointer; border-radius: 6px;
+}
+.m-row:hover { background: rgba(17, 17, 17, .05); }
+.m-row .m-num { font-size: 11px; color: #555; flex: none; }
+.m-row .m-en { font-size: 14px; font-weight: 700; letter-spacing: .02em; }
+.m-row .m-zh { font-size: 12px; font-weight: 400; color: #555; }
+.m-row .m-years { font-size: 11.5px; color: #555; letter-spacing: .03em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-row .m-dur { margin-left: auto; font-size: 13px; font-weight: 700; flex: none; }
+.m-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.m-actions button {
+  background: transparent; border: var(--dash); border-radius: 999px;
+  padding: 9px 16px; font-size: 11px; letter-spacing: .1em; cursor: pointer; color: var(--ink);
+}
+.m-actions button:first-child { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* 移动端详情：抽屉收窄到 56dvh，给上半屏人物热点留出空间；
+   提示行在小屏上隐藏（PREV / NEXT 按钮与圆点本身已足够明确），
+   避免与顶部热点圆点 01 重叠 */
+@media (max-width: 760px) {
+  .stage-ring-guide { width: 82vw; top: 50%; }
+  .receipt-handle { display: flex; }
+  .hint { display: none; }
+  .receipt-wrap { max-height: 56dvh; }
+  .receipt { max-height: 56dvh; }
+}
+
+/* 打印总账单：只留 Master Receipt */
+@media print {
+  body { background: #fff; }
+  body::after { display: none; }
+  .screen { height: auto; overflow: visible; }
+  .screen > *:not(.master-backdrop) { display: none !important; }
+  .master-backdrop { position: static; display: block; opacity: 1; pointer-events: auto; background: none; }
+  .master-receipt { width: 100%; max-height: none; box-shadow: none; transform: none; }
+  .m-actions { display: none; }
+  .foot { display: none; }
+}
