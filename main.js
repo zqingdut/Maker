@@ -98,11 +98,11 @@ const STAGES = [
     summary: '老兵开始造自己的东西',
     items: [
       '重新找回创造力的程序员',
-      '微信公众号 OoneAI：AI 生图与视频生成',
+      '微信公众号 重构下半场：AI 生图与视频生成',
       'Seedream 5.5 深度测评：高赞案例汇总',
       'Minimax H3 视频生成 + ComfyUI',
     ],
-    tags: ['OoneAI', 'Seedream', 'Minimax H3', 'ComfyUI'],
+    tags: ['重构下半场', 'Seedream', 'Minimax H3', 'ComfyUI'],
   },
 ];
 
