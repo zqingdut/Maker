@@ -136,6 +136,7 @@ body.mode-detail .tb-right { opacity: 0; pointer-events: none; }
   padding: 8px 17px; font-size: 11px; letter-spacing: .07em; cursor: pointer; color: var(--ink);
 }
 .bag-btn.pop { animation: bagpop .45s cubic-bezier(.2, 2.2, .4, 1); }
+.tool-link { text-decoration: none; display: inline-flex; align-items: center; }
 @keyframes bagpop { 0% { transform: scale(1); } 35% { transform: scale(1.22); } 100% { transform: scale(1); } }
 
 .qr {
